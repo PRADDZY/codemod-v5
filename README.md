@@ -8,7 +8,16 @@ Deterministic migration codemod for Solidity projects using OpenZeppelin Contrac
   - `security/ReentrancyGuard.sol` -> `utils/ReentrancyGuard.sol`
   - `security/Pausable.sol` -> `utils/Pausable.sol`
   - `draft-ERC20Permit.sol` -> `ERC20Permit.sol`
-- Adds explicit TODO markers for ambiguous `Ownable` constructor upgrades rather than making unsafe guesses.
+- Rewrites upgradeable import paths for known-safe moves:
+  - `contracts-upgradeable/security/*` -> `contracts-upgradeable/utils/*` for `ReentrancyGuardUpgradeable` and `PausableUpgradeable`
+  - `draft-ERC20PermitUpgradeable.sol` -> `ERC20PermitUpgradeable.sol`
+- Rewrites allowlisted upgradeable interface/library imports to non-upgradeable variants plus matching symbol names:
+  - `IERC20Upgradeable`, `IERC20MetadataUpgradeable`, `IERC20PermitUpgradeable`, `AddressUpgradeable`, `SafeERC20Upgradeable`
+- Adds explicit categorized TODO markers for ambiguous migrations:
+  - `ownable_constructor_initial_owner`
+  - `ownable_initializer_initial_owner`
+  - `token_hooks_update_migration`
+  - `removed_module_usage`
 - Produces a machine-readable migration report.
 
 ## Install
@@ -55,6 +64,9 @@ The generated report contains:
 - `deterministic_rewrites`
 - `strict_mode`
 - `dry_run`
+- `rule_hits`
+- `todo_by_category`
+- `todo_locations` (`file`, `line`, `category`, `message`)
 
 ## Config
 
@@ -70,13 +82,33 @@ See `oz-migrate.config.json`:
 
 ## Evaluation Harness
 
-Run codemod + optional compile/test commands on a target repository:
+Run codemod + optional baseline/post compile/test commands on a local repository:
 
 ```bash
 npm run evaluate -- ./target-repo --compile "forge build" --test "forge test"
 ```
 
-Outputs `evaluation-summary.json` in the target repo.
+Run against a remote repository (clone/fetch + optional ref checkout):
+
+```bash
+npm run evaluate -- --repo-url "https://github.com/OpenZeppelin/openzeppelin-contracts.git" --ref "v4.9.6" --workdir ".codemod-eval" --compile "npm run build" --test "npm test"
+```
+
+Outputs `evaluation-summary.json` and `migration-report.json` in the evaluated target directory.
+
+## Codemod MCP (Optional)
+
+Use Codemod MCP for rule discovery and iteration support:
+
+```bash
+npx codemod whoami --detailed
+npx codemod@latest mcp --help
+```
+
+Recommended workflow:
+1. Use MCP suggestions to identify candidate migration patterns.
+2. Promote only deterministic, allowlisted rewrites into this codemod.
+3. Add unit tests before enabling each new rewrite.
 
 ## Safety Policy
 
