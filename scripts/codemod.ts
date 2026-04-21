@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { useMetricAtom } from "codemod:metrics";
+import type { Codemod } from "codemod:ast-grep";
+import type Solidity from "codemod:ast-grep/langs/solidity";
 import {
   applyCodemodToSourceWithContext,
   buildRepoContext,
@@ -23,18 +25,18 @@ const PROJECT_DIR_MARKERS = [
   "openzeppelin-contracts-upgradeable",
 ];
 
-const repoContextCache = new Map();
+const repoContextCache = new Map<string, Promise<Awaited<ReturnType<typeof buildRepoContext>>>>();
 
 const deterministicRewriteMetric = useMetricAtom("deterministic_rewrites");
 const todoMarkerMetric = useMetricAtom("todo_markers");
 const ruleHitMetric = useMetricAtom("rule_hits");
 const todoCategoryMetric = useMetricAtom("todo_categories");
 
-function normalizePath(targetPath) {
+function normalizePath(targetPath: string): string {
   return targetPath.replace(/^\\\\\?\\/, "");
 }
 
-async function pathExists(targetPath) {
+async function pathExists(targetPath: string): Promise<boolean> {
   try {
     await fs.access(targetPath);
     return true;
@@ -43,7 +45,7 @@ async function pathExists(targetPath) {
   }
 }
 
-async function hasProjectMarkers(dirPath) {
+async function hasProjectMarkers(dirPath: string): Promise<boolean> {
   for (const marker of PROJECT_MARKERS) {
     if (await pathExists(path.join(dirPath, marker))) {
       return true;
@@ -57,7 +59,7 @@ async function hasProjectMarkers(dirPath) {
   return false;
 }
 
-async function guessProjectRoot(filePath) {
+async function guessProjectRoot(filePath: string): Promise<string> {
   let current = path.dirname(normalizePath(filePath));
   let fallbackRoot = current;
 
@@ -79,21 +81,25 @@ async function guessProjectRoot(filePath) {
   }
 }
 
-async function getRepoContext(filePath) {
+async function getRepoContext(filePath: string) {
   const projectRoot = await guessProjectRoot(filePath);
   if (!repoContextCache.has(projectRoot)) {
     repoContextCache.set(projectRoot, buildRepoContext(projectRoot));
   }
-  return repoContextCache.get(projectRoot);
+  return repoContextCache.get(projectRoot)!;
 }
 
-function incrementMetric(metric, count, dimensions) {
+function incrementMetric(
+  metric: ReturnType<typeof useMetricAtom>,
+  count: number,
+  dimensions: Record<string, string>,
+): void {
   for (let index = 0; index < count; index += 1) {
     metric.increment(dimensions);
   }
 }
 
-export default async function transform(root) {
+const codemod: Codemod<Solidity> = async (root) => {
   const source = root.root().text();
   const repoContext = await getRepoContext(root.filename());
   const result = applyCodemodToSourceWithContext(source, repoContext);
@@ -114,4 +120,6 @@ export default async function transform(root) {
   }
 
   return result.changed ? result.output : null;
-}
+};
+
+export default codemod;

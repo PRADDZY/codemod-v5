@@ -17,7 +17,8 @@ nodes:
     steps:
       - name: Apply safe OpenZeppelin migration
         js-ast-grep:
-          js_file: "scripts/codemod.js"
+          js_file: "./scripts/codemod.ts"
+          base_path: "."
           language: "solidity"
           include:
             - "**/*.sol"

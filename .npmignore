@@ -1,0 +1,17 @@
+.git/
+.codemod-eval/
+node_modules/
+docs/
+tests/
+.vitest/
+coverage/
+dist/
+build/
+cache/
+out/
+artifacts/
+*.log
+migration-report.json
+evaluation-summary.json
+package-lock.json
+oz-migrate.config.json

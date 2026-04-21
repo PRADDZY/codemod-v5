@@ -3,10 +3,19 @@
   "version": "0.2.0",
   "description": "Codemod workflow for safe OpenZeppelin Contracts v5 Solidity import migrations",
   "type": "module",
+  "files": [
+    "README.md",
+    "codemod.yaml",
+    "workflow.yaml",
+    "tsconfig.json",
+    "src",
+    "scripts"
+  ],
   "scripts": {
     "test": "vitest run && npx codemod@latest workflow validate -w .",
     "test:watch": "vitest",
     "test:unit": "vitest run",
+    "check-types": "tsc --noEmit",
     "workflow:validate": "npx codemod@latest workflow validate -w .",
     "workflow:run": "npx codemod@latest workflow run -w .",
     "codemod": "npx codemod@latest workflow run -w .",
@@ -26,6 +35,8 @@
     "picocolors": "^1.1.1"
   },
   "devDependencies": {
+    "@codemod.com/jssg-types": "latest",
+    "typescript": "latest",
     "vitest": "^2.1.3"
   }
 }
