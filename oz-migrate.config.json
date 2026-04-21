@@ -1,0 +1,11 @@
+{
+  "include": ["**/*.sol"],
+  "exclude": [
+    "**/node_modules/**",
+    "**/lib/**",
+    "**/out/**",
+    "**/artifacts/**",
+    "**/cache/**"
+  ],
+  "strict": false
+}

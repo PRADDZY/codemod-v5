@@ -1,0 +1,31 @@
+{
+  "name": "@local/oz-v4-to-v5-codemod",
+  "version": "0.1.0",
+  "description": "Deterministic OpenZeppelin Contracts v4 to v5 migration codemod",
+  "type": "module",
+  "bin": {
+    "oz-v4-to-v5": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "codemod": "node ./src/cli.js",
+    "evaluate": "node ./scripts/evaluate-repo.js"
+  },
+  "keywords": [
+    "codemod",
+    "openzeppelin",
+    "solidity",
+    "migration"
+  ],
+  "author": "Encode Hackathon Team",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0",
+    "fast-glob": "^3.3.2",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.3"
+  }
+}
