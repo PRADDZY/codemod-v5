@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+
+# build artifacts
+dist/
+build/
+coverage/
+.cache/
+
+# runtime output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# environment files
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# test/tool artifacts
+.vitest/
+*.tsbuildinfo
+migration-report.json
+evaluation-summary.json
