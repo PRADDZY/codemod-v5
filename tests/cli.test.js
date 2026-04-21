@@ -12,7 +12,20 @@ describe("CLI", () => {
   it("writes rich migration-report.json and preserves files in dry-run mode", async () => {
     const dir = await makeTempDir();
     const contractsDir = path.join(dir, "contracts");
+    const ozDir = path.join(
+      dir,
+      "node_modules",
+      "@openzeppelin",
+      "contracts",
+      "utils",
+    );
     await fs.mkdir(contractsDir, { recursive: true });
+    await fs.mkdir(ozDir, { recursive: true });
+    await fs.writeFile(
+      path.join(ozDir, "ReentrancyGuard.sol"),
+      "// stub\n",
+      "utf8",
+    );
     const filePath = path.join(contractsDir, "Vault.sol");
     const input = [
       'import "@openzeppelin/contracts/security/ReentrancyGuard.sol";',

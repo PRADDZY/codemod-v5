@@ -5,16 +5,6 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 
-function runProgram(command, args, cwd) {
-  const result = spawnSync(command, args, { cwd, encoding: "utf8" });
-  return {
-    command: `${command} ${args.join(" ")}`.trim(),
-    status: result.status ?? 1,
-    stdout: result.stdout ?? "",
-    stderr: result.stderr ?? "",
-  };
-}
-
 function runShell(command, cwd) {
   const result = spawnSync(command, { cwd, encoding: "utf8", shell: true });
   return {
@@ -23,6 +13,10 @@ function runShell(command, cwd) {
     stdout: result.stdout ?? "",
     stderr: result.stderr ?? "",
   };
+}
+
+function shellQuote(value) {
+  return `"${String(value).replace(/"/g, '\\"')}"`;
 }
 
 async function pathExists(targetPath) {
@@ -116,6 +110,36 @@ export function buildRegressionSummary({ baseline, postCodemod }) {
   };
 }
 
+export function buildWorkflowRunCommand({
+  workflowPath,
+  targetPath,
+  dryRun = false,
+  aiReview = false,
+}) {
+  const args = [
+    "codemod@latest",
+    "workflow",
+    "run",
+    "-w",
+    shellQuote(workflowPath),
+    "-t",
+    shellQuote(targetPath),
+    "--no-interactive",
+    "--allow-dirty",
+    "--allow-fs",
+    "--param",
+    `aiReview=${aiReview}`,
+  ];
+
+  if (dryRun) {
+    args.push("--dry-run");
+  }
+
+  return {
+    command: `npx ${args.join(" ")}`,
+  };
+}
+
 async function resolveTargetFromRepoUrl({ repoUrl, ref, workdir }) {
   const workdirRoot = path.resolve(workdir);
   await fs.mkdir(workdirRoot, { recursive: true });
@@ -146,6 +170,7 @@ async function resolveTargetFromRepoUrl({ repoUrl, ref, workdir }) {
 }
 
 async function main() {
+  const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   const options = parseArgs(process.argv.slice(2));
   let target = null;
   const setup = {};
@@ -165,7 +190,6 @@ async function main() {
     throw new Error(`Target path does not exist: ${target}`);
   }
 
-  const reportPath = path.join(target, "migration-report.json");
   const summary = {
     target_path: target,
     repo_url: options.repoUrl,
@@ -188,17 +212,12 @@ async function main() {
     summary.baseline.test = runShell(options.testCmd, target);
   }
 
-  summary.codemod = runProgram(
-    process.execPath,
-    [
-      path.resolve("src/cli.js"),
-      "--apply",
-      "--report-json",
-      reportPath,
-      target,
-    ],
-    process.cwd(),
-  );
+  const workflowInvocation = buildWorkflowRunCommand({
+    workflowPath: packageRoot,
+    targetPath: target,
+    dryRun: false,
+  });
+  summary.codemod = runShell(workflowInvocation.command, process.cwd());
   if (summary.codemod.status !== 0) {
     const summaryPath = path.join(target, "evaluation-summary.json");
     await fs.writeFile(summaryPath, JSON.stringify(summary, null, 2), "utf8");

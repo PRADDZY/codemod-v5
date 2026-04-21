@@ -1,6 +1,5 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import fg from "fast-glob";
 
 const DEFAULT_INCLUDE = ["**/*.sol"];
 const DEFAULT_EXCLUDE = [
@@ -12,6 +11,8 @@ const DEFAULT_EXCLUDE = [
 ];
 
 const TODO_MARKER_REGEX = /OZ-V5-TODO\[(?<category>[a-z0-9_]+)\]:\s*(?<message>.*)$/;
+const OZ_CONTRACTS_PREFIX = "@openzeppelin/contracts/";
+const OZ_UPGRADEABLE_PREFIX = "@openzeppelin/contracts-upgradeable/";
 
 const SYMBOL_REWRITE_RULES = {
   erc20_i_erc20_symbol: {
@@ -36,71 +37,82 @@ const SYMBOL_REWRITE_RULES = {
   },
 };
 
-const DETERMINISTIC_REWRITES = [
+const IMPORT_REWRITE_RULES = [
   {
     id: "contracts_security_reentrancyguard_import",
-    from: /@openzeppelin\/contracts\/security\/ReentrancyGuard\.sol/g,
-    to: "@openzeppelin/contracts/utils/ReentrancyGuard.sol",
+    importFrom: "@openzeppelin/contracts/security/ReentrancyGuard.sol",
+    importTo: "@openzeppelin/contracts/utils/ReentrancyGuard.sol",
   },
   {
     id: "contracts_security_pausable_import",
-    from: /@openzeppelin\/contracts\/security\/Pausable\.sol/g,
-    to: "@openzeppelin/contracts/utils/Pausable.sol",
+    importFrom: "@openzeppelin/contracts/security/Pausable.sol",
+    importTo: "@openzeppelin/contracts/utils/Pausable.sol",
   },
   {
     id: "contracts_erc20permit_draft_import",
-    from: /@openzeppelin\/contracts\/token\/ERC20\/extensions\/draft-ERC20Permit\.sol/g,
-    to: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol",
+    importFrom:
+      "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol",
+    importTo: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol",
   },
   {
     id: "contracts_upgradeable_security_reentrancyguard_import",
-    from: /@openzeppelin\/contracts-upgradeable\/security\/ReentrancyGuardUpgradeable\.sol/g,
-    to: "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol",
+    importFrom:
+      "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol",
+    importTo:
+      "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol",
   },
   {
     id: "contracts_upgradeable_security_pausable_import",
-    from: /@openzeppelin\/contracts-upgradeable\/security\/PausableUpgradeable\.sol/g,
-    to: "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol",
+    importFrom: "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol",
+    importTo: "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol",
   },
   {
     id: "contracts_upgradeable_erc20permit_draft_import",
-    from: /@openzeppelin\/contracts-upgradeable\/token\/ERC20\/extensions\/draft-ERC20PermitUpgradeable\.sol/g,
-    to: "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol",
+    importFrom:
+      "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol",
+    importTo:
+      "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol",
   },
   {
     id: "contracts_upgradeable_i_erc20_import",
-    from: /@openzeppelin\/contracts-upgradeable\/token\/ERC20\/IERC20Upgradeable\.sol/g,
-    to: "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+    importFrom:
+      "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol",
+    importTo: "@openzeppelin/contracts/token/ERC20/IERC20.sol",
     symbolRewriteIds: ["erc20_i_erc20_symbol"],
   },
   {
     id: "contracts_upgradeable_i_erc20_metadata_import",
-    from: /@openzeppelin\/contracts-upgradeable\/token\/ERC20\/extensions\/IERC20MetadataUpgradeable\.sol/g,
-    to: "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+    importFrom:
+      "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol",
+    importTo:
+      "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
     symbolRewriteIds: ["erc20_i_erc20_metadata_symbol"],
   },
   {
     id: "contracts_upgradeable_i_erc20_permit_import",
-    from: /@openzeppelin\/contracts-upgradeable\/token\/ERC20\/extensions\/IERC20PermitUpgradeable\.sol/g,
-    to: "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol",
+    importFrom:
+      "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20PermitUpgradeable.sol",
+    importTo: "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol",
     symbolRewriteIds: ["erc20_i_erc20_permit_symbol"],
   },
   {
     id: "contracts_upgradeable_i_erc20_permit_draft_import",
-    from: /@openzeppelin\/contracts-upgradeable\/token\/ERC20\/extensions\/draft-IERC20PermitUpgradeable\.sol/g,
-    to: "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol",
+    importFrom:
+      "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol",
+    importTo: "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol",
     symbolRewriteIds: ["erc20_i_erc20_permit_symbol"],
   },
   {
     id: "contracts_upgradeable_address_import",
-    from: /@openzeppelin\/contracts-upgradeable\/utils\/AddressUpgradeable\.sol/g,
-    to: "@openzeppelin/contracts/utils/Address.sol",
+    importFrom: "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol",
+    importTo: "@openzeppelin/contracts/utils/Address.sol",
     symbolRewriteIds: ["utils_address_symbol"],
   },
   {
     id: "contracts_upgradeable_safe_erc20_import",
-    from: /@openzeppelin\/contracts-upgradeable\/token\/ERC20\/utils\/SafeERC20Upgradeable\.sol/g,
-    to: "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
+    importFrom:
+      "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol",
+    importTo: "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
     symbolRewriteIds: ["erc20_safe_erc20_symbol"],
   },
 ];
@@ -148,6 +160,122 @@ function incrementCounter(target, key, amount) {
   target[key] = (target[key] ?? 0) + amount;
 }
 
+async function pathExists(targetPath) {
+  try {
+    await fs.access(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function dedupe(values) {
+  return [...new Set(values)];
+}
+
+function parseFoundryRemappings(raw) {
+  return [...raw.matchAll(/["']([^"']+?=.+?)["']/g)].map((match) => match[1]);
+}
+
+async function loadRemappings(root) {
+  const remappings = [];
+  const remappingsPath = path.join(root, "remappings.txt");
+  if (await pathExists(remappingsPath)) {
+    const fileRemappings = await fs.readFile(remappingsPath, "utf8");
+    remappings.push(...fileRemappings.split(/\r?\n/));
+  }
+
+  const foundryConfigPath = path.join(root, "foundry.toml");
+  if (await pathExists(foundryConfigPath)) {
+    const foundryConfig = await fs.readFile(foundryConfigPath, "utf8");
+    remappings.push(...parseFoundryRemappings(foundryConfig));
+  }
+
+  return remappings
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.replace(/['"]/g, ""))
+    .map((line) => {
+      const separatorIndex = line.indexOf("=");
+      if (separatorIndex === -1) {
+        return null;
+      }
+      return {
+        alias: line.slice(0, separatorIndex),
+        target: line.slice(separatorIndex + 1),
+      };
+    })
+    .filter(Boolean);
+}
+
+function defaultImportBases(root) {
+  return {
+    [OZ_CONTRACTS_PREFIX]: dedupe([
+      path.join(root, "node_modules", "@openzeppelin", "contracts"),
+      path.join(root, "lib", "openzeppelin-contracts", "contracts"),
+      path.join(root, "openzeppelin-contracts", "contracts"),
+      path.join(root, "vendor", "openzeppelin-contracts", "contracts"),
+    ]),
+    [OZ_UPGRADEABLE_PREFIX]: dedupe([
+      path.join(root, "node_modules", "@openzeppelin", "contracts-upgradeable"),
+      path.join(root, "lib", "openzeppelin-contracts-upgradeable", "contracts"),
+      path.join(root, "openzeppelin-contracts-upgradeable", "contracts"),
+      path.join(root, "vendor", "openzeppelin-contracts-upgradeable", "contracts"),
+    ]),
+  };
+}
+
+export async function buildRepoContext(root) {
+  const importBases = defaultImportBases(root);
+  const remappings = await loadRemappings(root);
+  for (const remapping of remappings) {
+    if (!importBases[remapping.alias]) {
+      continue;
+    }
+    importBases[remapping.alias].push(path.resolve(root, remapping.target));
+  }
+
+  const resolvedImportBases = Object.fromEntries(
+    Object.entries(importBases).map(([prefix, bases]) => [prefix, dedupe(bases)]),
+  );
+  async function resolveImport(importPath) {
+    const prefix = Object.keys(resolvedImportBases).find((candidate) =>
+      importPath.startsWith(candidate),
+    );
+    if (!prefix) {
+      return true;
+    }
+
+    const suffix = importPath.slice(prefix.length);
+    for (const basePath of resolvedImportBases[prefix]) {
+      if (await pathExists(path.join(basePath, suffix))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  const resolvedImportCache = new Map();
+  const relevantImports = dedupe(IMPORT_REWRITE_RULES.map((rewrite) => rewrite.importTo));
+  for (const importPath of relevantImports) {
+    resolvedImportCache.set(importPath, await resolveImport(importPath));
+  }
+
+  function canResolveImport(importPath) {
+    if (resolvedImportCache.has(importPath)) {
+      return resolvedImportCache.get(importPath);
+    }
+    const prefix = Object.keys(resolvedImportBases).find((candidate) =>
+      importPath.startsWith(candidate),
+    );
+    return !prefix;
+  }
+
+  return {
+    canResolveImport,
+  };
+}
+
 function hasTodoCategory(line, category) {
   const categoryRegex = new RegExp(
     `OZ-V5-TODO\\[${escapeRegExp(category)}\\]`,
@@ -165,17 +293,22 @@ function addTodoMarkerIfMissing(outputLines, line, category, message) {
   outputLines.push(`${indent}// OZ-V5-TODO[${category}]: ${message}`);
 }
 
-function applyDeterministicRewrites(source) {
+function applyDeterministicRewrites(source, repoContext) {
   let output = source;
   let deterministicRewrites = 0;
   const ruleHits = {};
   const activeSymbolRewriteIds = new Set();
 
-  for (const rewrite of DETERMINISTIC_REWRITES) {
+  for (const rewrite of IMPORT_REWRITE_RULES) {
+    const canRewrite = repoContext.canResolveImport(rewrite.importTo);
+    if (!canRewrite) {
+      continue;
+    }
+    const rewriteRegex = new RegExp(escapeRegExp(rewrite.importFrom), "g");
     let matches = 0;
-    output = output.replace(rewrite.from, () => {
+    output = output.replace(rewriteRegex, () => {
       matches += 1;
-      return rewrite.to;
+      return rewrite.importTo;
     });
     if (matches > 0) {
       incrementCounter(ruleHits, rewrite.id, matches);
@@ -213,12 +346,29 @@ function applyDeterministicRewrites(source) {
   };
 }
 
-function applyTodoDetectors(source) {
+function applyTodoDetectors(source, repoContext) {
   const hasOwnableInheritance = /\bis\s+[^{\n;]*\bOwnable\b/.test(source);
   const inputLines = source.split("\n");
   const outputLines = [];
 
   for (const line of inputLines) {
+    for (const rewrite of IMPORT_REWRITE_RULES) {
+      const containsImport = line.includes(rewrite.importFrom);
+      if (!containsImport) {
+        continue;
+      }
+      const canRewrite = repoContext.canResolveImport(rewrite.importTo);
+      if (canRewrite) {
+        continue;
+      }
+      addTodoMarkerIfMissing(
+        outputLines,
+        line,
+        "import_path_layout_review",
+        `Skipped ${rewrite.importFrom} -> ${rewrite.importTo} because the target path is not present in this repository layout.`,
+      );
+    }
+
     for (const detector of TODO_DEFINITIONS) {
       if (!detector.shouldFlag({ line, hasOwnableInheritance })) {
         continue;
@@ -280,9 +430,17 @@ function collectTodoMetadata(source) {
 }
 
 export function applyCodemodToSource(source) {
-  const deterministicResult = applyDeterministicRewrites(source);
-  const todoDetectorResult = applyTodoDetectors(deterministicResult.output);
+  return applyCodemodToSourceWithContext(source, {
+    canResolveImport: () => true,
+  });
+}
+
+export function applyCodemodToSourceWithContext(source, repoContext) {
+  const deterministicResult = applyDeterministicRewrites(source, repoContext);
+  const todoDetectorResult = applyTodoDetectors(deterministicResult.output, repoContext);
   const todoMetadata = collectTodoMetadata(todoDetectorResult.output);
+  const totalSignal =
+    deterministicResult.deterministicRewrites + todoMetadata.todoLocations.length;
 
   return {
     output: todoDetectorResult.output,
@@ -293,6 +451,15 @@ export function applyCodemodToSource(source) {
       ruleHits: deterministicResult.ruleHits,
       todoByCategory: todoMetadata.todoByCategory,
       todoLocations: todoMetadata.todoLocations,
+      automationRatioEstimate:
+        totalSignal === 0
+          ? 1
+          : Number(
+              (
+                deterministicResult.deterministicRewrites / totalSignal
+              ).toFixed(4),
+            ),
+      aiFollowupRequired: todoMetadata.todoLocations.length > 0,
     },
   };
 }
@@ -314,7 +481,9 @@ export async function runCodemod({
   exclude,
   strict,
 }) {
+  const { default: fg } = await import("fast-glob");
   const root = path.resolve(rootPath);
+  const repoContext = await buildRepoContext(root);
   const includeGlobs = normalizeArray(include, DEFAULT_INCLUDE);
   const excludeGlobs = normalizeArray(exclude, DEFAULT_EXCLUDE);
   const files = await fg(includeGlobs, {
@@ -337,12 +506,14 @@ export async function runCodemod({
     rule_hits: {},
     todo_by_category: {},
     todo_locations: [],
+    automation_ratio_estimate: 1,
+    ai_followup_required: false,
   };
 
   for (const file of files) {
     const relativePath = path.relative(root, file).split(path.sep).join("/");
     const source = await fs.readFile(file, "utf8");
-    const result = applyCodemodToSource(source);
+    const result = applyCodemodToSourceWithContext(source, repoContext);
     report.deterministic_rewrites += result.metrics.deterministicRewrites;
     report.todo_count += result.metrics.todoMarkers;
     for (const [ruleId, hits] of Object.entries(result.metrics.ruleHits)) {
@@ -372,6 +543,11 @@ export async function runCodemod({
     totalSignal === 0
       ? 0
       : Number((report.deterministic_rewrites / totalSignal).toFixed(4));
+  report.automation_ratio_estimate =
+    totalSignal === 0
+      ? 1
+      : Number((report.deterministic_rewrites / totalSignal).toFixed(4));
+  report.ai_followup_required = report.todo_count > 0;
 
   return report;
 }

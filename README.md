@@ -1,117 +1,81 @@
-# OpenZeppelin v4 -> v5 Codemod
+# OpenZeppelin v5 Safe Imports
 
-Deterministic migration codemod for Solidity projects using OpenZeppelin Contracts.
+Focused Codemod workflow for Solidity repositories upgrading toward OpenZeppelin Contracts v5.
 
-## What It Does
-
-- Safely rewrites known import path changes:
-  - `security/ReentrancyGuard.sol` -> `utils/ReentrancyGuard.sol`
-  - `security/Pausable.sol` -> `utils/Pausable.sol`
-  - `draft-ERC20Permit.sol` -> `ERC20Permit.sol`
-- Rewrites upgradeable import paths for known-safe moves:
-  - `contracts-upgradeable/security/*` -> `contracts-upgradeable/utils/*` for `ReentrancyGuardUpgradeable` and `PausableUpgradeable`
-  - `draft-ERC20PermitUpgradeable.sol` -> `ERC20PermitUpgradeable.sol`
-- Rewrites allowlisted upgradeable interface/library imports to non-upgradeable variants plus matching symbol names:
-  - `IERC20Upgradeable`, `IERC20MetadataUpgradeable`, `IERC20PermitUpgradeable`, `AddressUpgradeable`, `SafeERC20Upgradeable`
-- Adds explicit categorized TODO markers for ambiguous migrations:
-  - `ownable_constructor_initial_owner`
-  - `ownable_initializer_initial_owner`
-  - `token_hooks_update_migration`
-  - `removed_module_usage`
-- Produces a machine-readable migration report.
-
-## Install
-
-```bash
-npm install
-```
+It handles the import-path and allowlisted symbol changes that are mechanical, then leaves categorized `OZ-V5-TODO[...]` markers where local review is still required.
 
 ## Run
 
-Dry-run (default):
+Preview changes:
 
 ```bash
-npx oz-v4-to-v5 --dry-run --report-json migration-report.json ./path/to/repo
+npx codemod@latest workflow run -w . -t /path/to/repo --no-interactive --allow-dirty --allow-fs --dry-run
 ```
 
 Apply changes:
 
 ```bash
-npx oz-v4-to-v5 --apply --report-json migration-report.json ./path/to/repo
+npx codemod@latest workflow run -w . -t /path/to/repo --no-interactive --allow-dirty --allow-fs
 ```
 
-Use config:
+Optional AI follow-up for unresolved TODOs:
 
 ```bash
-npx oz-v4-to-v5 --config oz-migrate.config.json --apply ./path/to/repo
+npx codemod@latest workflow run -w . -t /path/to/repo --no-interactive --allow-dirty --allow-fs --param aiReview=true
 ```
 
-Strict mode (non-zero exit when unresolved TODO markers exist):
+## Coverage
+
+- Safe import moves:
+  - `@openzeppelin/contracts/security/ReentrancyGuard.sol` -> `@openzeppelin/contracts/utils/ReentrancyGuard.sol`
+  - `@openzeppelin/contracts/security/Pausable.sol` -> `@openzeppelin/contracts/utils/Pausable.sol`
+  - draft ERC20 permit imports to their v5 paths
+- Upgradeable import moves for the same safe path changes
+- Allowlisted upgradeable symbol rewrites when the corresponding import rewrite is safe:
+  - `IERC20Upgradeable` -> `IERC20`
+  - `IERC20MetadataUpgradeable` -> `IERC20Metadata`
+  - `IERC20PermitUpgradeable` -> `IERC20Permit`
+  - `AddressUpgradeable` -> `Address`
+  - `SafeERC20Upgradeable` -> `SafeERC20`
+
+## Manual Follow-Up
+
+The workflow will keep explicit TODO markers for cases that need code-aware review:
+
+- `ownable_constructor_initial_owner`
+- `ownable_initializer_initial_owner`
+- `token_hooks_update_migration`
+- `removed_module_usage`
+- `import_path_layout_review`
+
+## Validate
 
 ```bash
-npx oz-v4-to-v5 --apply --strict ./path/to/repo
+npx codemod@latest workflow validate -w .
 ```
 
-## Report Contract
+## Registry
 
-The generated report contains:
+Check the registry before publishing:
 
-- `files_scanned`
-- `files_changed`
-- `fp_checks`
-- `todo_count`
-- `coverage_estimate`
-- `deterministic_rewrites`
-- `strict_mode`
-- `dry_run`
-- `rule_hits`
-- `todo_by_category`
-- `todo_locations` (`file`, `line`, `category`, `message`)
-
-## Config
-
-See `oz-migrate.config.json`:
-
-```json
-{
-  "include": ["**/*.sol"],
-  "exclude": ["**/node_modules/**", "**/out/**", "**/artifacts/**"],
-  "strict": false
-}
+```bash
+npx codemod@latest search "openzeppelin v5 safe imports"
 ```
 
-## Evaluation Harness
+Publish when ready:
 
-Run codemod + optional baseline/post compile/test commands on a local repository:
+```bash
+npx codemod@latest publish
+```
+
+## Local Checks
+
+```bash
+npm test
+```
+
+Optional repo-level evaluation:
 
 ```bash
 npm run evaluate -- ./target-repo --compile "forge build" --test "forge test"
 ```
-
-Run against a remote repository (clone/fetch + optional ref checkout):
-
-```bash
-npm run evaluate -- --repo-url "https://github.com/OpenZeppelin/openzeppelin-contracts.git" --ref "v4.9.6" --workdir ".codemod-eval" --compile "npm run build" --test "npm test"
-```
-
-Outputs `evaluation-summary.json` and `migration-report.json` in the evaluated target directory.
-
-## Codemod MCP (Optional)
-
-Use Codemod MCP for rule discovery and iteration support:
-
-```bash
-npx codemod whoami --detailed
-npx codemod@latest mcp --help
-```
-
-Recommended workflow:
-1. Use MCP suggestions to identify candidate migration patterns.
-2. Promote only deterministic, allowlisted rewrites into this codemod.
-3. Add unit tests before enabling each new rewrite.
-
-## Safety Policy
-
-- Deterministic-only auto-rewrites.
-- Ambiguous transformations are marked with `OZ-V5-TODO`.
-- Re-running the codemod is idempotent for already migrated imports.

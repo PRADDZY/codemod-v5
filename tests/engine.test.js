@@ -1,7 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { applyCodemodToSource } from "../src/engine.js";
+import {
+  applyCodemodToSource,
+  applyCodemodToSourceWithContext,
+} from "../src/engine.js";
 
 describe("applyCodemodToSource", () => {
+  it("returns synchronous results for source-only transforms", () => {
+    const input = [
+      'import "@openzeppelin/contracts/security/ReentrancyGuard.sol";',
+      "contract Vault is ReentrancyGuard {}",
+      "",
+    ].join("\n");
+
+    const result = applyCodemodToSource(input);
+
+    expect(result).not.toBeInstanceOf(Promise);
+    expect(result.output).toContain(
+      'import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";',
+    );
+  });
+
   it("rewrites ReentrancyGuard import path deterministically", () => {
     const input = [
       'import "@openzeppelin/contracts/security/ReentrancyGuard.sol";',
@@ -116,5 +134,31 @@ describe("applyCodemodToSource", () => {
         []).length,
     ).toBe(1);
     expect(twice.metrics.todoMarkers).toBe(1);
+  });
+
+  it("emits a layout review TODO when the target import path is unavailable", () => {
+    const input = [
+      'import "@openzeppelin/contracts/security/ReentrancyGuard.sol";',
+      "contract Vault is ReentrancyGuard {}",
+      "",
+    ].join("\n");
+
+    const result = applyCodemodToSourceWithContext(input, {
+      canResolveImport(importPath) {
+        return importPath !== "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+      },
+    });
+
+    expect(result.output).toContain(
+      "OZ-V5-TODO[import_path_layout_review]",
+    );
+    expect(result.output).toContain(
+      'import "@openzeppelin/contracts/security/ReentrancyGuard.sol";',
+    );
+    expect(result.output).not.toContain(
+      'import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";',
+    );
+    expect(result.metrics.todoByCategory.import_path_layout_review).toBe(1);
+    expect(result.metrics.aiFollowupRequired).toBe(true);
   });
 });

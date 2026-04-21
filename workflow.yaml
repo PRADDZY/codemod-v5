@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/codemod/codemod/refs/heads/main/schemas/workflow.json
+
+version: "1"
+
+params:
+  schema:
+    aiReview:
+      name: "AI follow-up"
+      description: "Run the optional AI follow-up step over unresolved TODO markers."
+      type: boolean
+      default: false
+
+nodes:
+  - id: transform
+    name: Transform Solidity imports
+    type: automatic
+    steps:
+      - name: Apply safe OpenZeppelin migration
+        js-ast-grep:
+          js_file: "scripts/codemod.js"
+          language: "solidity"
+          include:
+            - "**/*.sol"
+          exclude:
+            - "**/node_modules/**"
+            - "**/lib/**"
+            - "**/out/**"
+            - "**/artifacts/**"
+            - "**/cache/**"
+          max_threads: 1
+
+  - id: ai-followup
+    name: AI follow-up
+    type: automatic
+    depends_on: [transform]
+    steps:
+      - name: Resolve obvious TODOs
+        if: params.aiReview == true
+        ai:
+          model: "gpt-4o"
+          max_steps: 20
+          system_prompt: |
+            You are assisting a Solidity migration workflow.
+            Make only changes that are directly supported by local code context.
+            Preserve OZ-V5-TODO markers for anything ambiguous.
+          prompt: |
+            Work in the target repository.
+
+            Review the current diff and any remaining `OZ-V5-TODO` markers.
+
+            For each unresolved marker, either:
+            1. apply a minimal local fix when the correct edit is mechanically obvious from nearby Solidity code, or
+            2. leave the source unchanged and keep the TODO marker.
+
+            Focus only on:
+            - ownable_constructor_initial_owner
+            - ownable_initializer_initial_owner
+            - token_hooks_update_migration
+            - import_path_layout_review
+            - removed_module_usage
+
+            Do not touch unrelated files. Do not remove TODO markers unless you fully resolve the underlying issue.

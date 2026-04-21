@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildRegressionSummary,
+  buildWorkflowRunCommand,
   parseArgs,
   repoNameFromUrl,
 } from "../scripts/evaluate-repo.js";
@@ -70,5 +71,20 @@ describe("evaluate-repo helpers", () => {
     expect(regression.compile).toBe(true);
     expect(regression.test).toBe(false);
     expect(regression.any).toBe(true);
+  });
+
+  it("builds a Codemod workflow invocation for the target repo", () => {
+    const invocation = buildWorkflowRunCommand({
+      workflowPath: "C:/work/package",
+      targetPath: "C:/work/target-repo",
+      dryRun: true,
+    });
+
+    expect(invocation.command).toMatch(/codemod(@latest)? workflow run/);
+    expect(invocation.command).toContain('-w "C:/work/package"');
+    expect(invocation.command).toContain('-t "C:/work/target-repo"');
+    expect(invocation.command).toContain("--allow-dirty");
+    expect(invocation.command).toContain("--dry-run");
+    expect(invocation.command).toContain("--param aiReview=false");
   });
 });

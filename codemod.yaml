@@ -1,0 +1,19 @@
+schema_version: "1.0"
+
+name: "@praddzy/openzeppelin-v5-safe-imports"
+version: "0.2.0"
+description: "Safe OpenZeppelin Contracts v5 Solidity import migration with optional AI follow-up."
+author: "Pratik Daithankar"
+license: "MIT"
+workflow: "workflow.yaml"
+
+targets:
+  languages: ["solidity"]
+
+keywords: ["codemod", "openzeppelin", "solidity", "migration"]
+
+registry:
+  access: "public"
+  visibility: "public"
+
+capabilities: ["fs"]

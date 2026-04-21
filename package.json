@@ -1,15 +1,15 @@
 {
-  "name": "@local/oz-v4-to-v5-codemod",
-  "version": "0.1.0",
-  "description": "Deterministic OpenZeppelin Contracts v4 to v5 migration codemod",
+  "name": "@praddzy/openzeppelin-v5-safe-imports",
+  "version": "0.2.0",
+  "description": "Codemod workflow for safe OpenZeppelin Contracts v5 Solidity import migrations",
   "type": "module",
-  "bin": {
-    "oz-v4-to-v5": "./src/cli.js"
-  },
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run && npx codemod@latest workflow validate -w .",
     "test:watch": "vitest",
-    "codemod": "node ./src/cli.js",
+    "test:unit": "vitest run",
+    "workflow:validate": "npx codemod@latest workflow validate -w .",
+    "workflow:run": "npx codemod@latest workflow run -w .",
+    "codemod": "npx codemod@latest workflow run -w .",
     "evaluate": "node ./scripts/evaluate-repo.js"
   },
   "keywords": [
@@ -18,7 +18,7 @@
     "solidity",
     "migration"
   ],
-  "author": "Encode Hackathon Team",
+  "author": "Pratik Daithankar",
   "license": "MIT",
   "dependencies": {
     "commander": "^12.1.0",
