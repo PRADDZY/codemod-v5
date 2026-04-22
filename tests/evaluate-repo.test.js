@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildVerdictSummary,
   buildRegressionSummary,
   buildWorkflowRunCommand,
   parseArgs,
@@ -86,5 +87,76 @@ describe("evaluate-repo helpers", () => {
     expect(invocation.command).toContain("--allow-dirty");
     expect(invocation.command).toContain("--dry-run");
     expect(invocation.command).toContain("--param aiReview=false");
+  });
+
+  it("returns pass verdict when all requested checks pass", () => {
+    const verdict = buildVerdictSummary({
+      baseline: {
+        compile: { status: 0, stderr: "" },
+        test: { status: 0, stderr: "" },
+      },
+      postCodemod: {
+        compile: { status: 0, stderr: "" },
+        test: { status: 0, stderr: "" },
+      },
+      regression: {
+        compile: false,
+        test: false,
+        any: false,
+      },
+      requested: {
+        compile: true,
+        test: true,
+      },
+    });
+
+    expect(verdict.verdict).toBe("pass");
+    expect(verdict.reason).toContain("passed");
+  });
+
+  it("returns regression verdict when baseline pass regresses post-codemod", () => {
+    const verdict = buildVerdictSummary({
+      baseline: {
+        compile: { status: 0, stderr: "" },
+      },
+      postCodemod: {
+        compile: { status: 1, stderr: "compile failed" },
+      },
+      regression: {
+        compile: true,
+        test: false,
+        any: true,
+      },
+      requested: {
+        compile: true,
+        test: false,
+      },
+    });
+
+    expect(verdict.verdict).toBe("regression");
+    expect(verdict.reason).toContain("Baseline compile passed");
+  });
+
+  it("returns environment-limited verdict for symmetric OOM failures", () => {
+    const verdict = buildVerdictSummary({
+      baseline: {
+        test: { status: 134, stderr: "FATAL ERROR: Reached heap limit Allocation failed" },
+      },
+      postCodemod: {
+        test: { status: 134, stderr: "JavaScript heap out of memory" },
+      },
+      regression: {
+        compile: false,
+        test: false,
+        any: false,
+      },
+      requested: {
+        compile: false,
+        test: true,
+      },
+    });
+
+    expect(verdict.verdict).toBe("environment-limited");
+    expect(verdict.reason).toContain("out-of-memory");
   });
 });

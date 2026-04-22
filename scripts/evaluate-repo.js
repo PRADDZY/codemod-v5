@@ -110,6 +110,75 @@ export function buildRegressionSummary({ baseline, postCodemod }) {
   };
 }
 
+function isOomFailure(result) {
+  if (!result || result.status === 0) {
+    return false;
+  }
+  const output = `${result.stderr ?? ""}\n${result.stdout ?? ""}`.toLowerCase();
+  return (
+    output.includes("heap out of memory") ||
+    output.includes("reached heap limit") ||
+    output.includes("allocation failed")
+  );
+}
+
+function requestedChecksFromOptions(options) {
+  return {
+    compile: Boolean(options.compileCmd),
+    test: Boolean(options.testCmd),
+  };
+}
+
+export function buildVerdictSummary({ baseline, postCodemod, regression, requested }) {
+  if (regression.any) {
+    const regressedCheck = regression.compile ? "compile" : "test";
+    return {
+      verdict: "regression",
+      reason: `Baseline ${regressedCheck} passed but post-codemod ${regressedCheck} failed.`,
+    };
+  }
+
+  const checks = ["compile", "test"].filter((checkName) => requested[checkName]);
+
+  if (checks.length === 0) {
+    return {
+      verdict: "pass",
+      reason: "No compile/test command provided for evaluation.",
+    };
+  }
+
+  const allPass = checks.every(
+    (checkName) =>
+      baseline[checkName]?.status === 0 && postCodemod[checkName]?.status === 0,
+  );
+
+  if (allPass) {
+    return {
+      verdict: "pass",
+      reason: "All requested baseline and post-codemod checks passed.",
+    };
+  }
+
+  const oomChecks = checks.filter(
+    (checkName) =>
+      isOomFailure(baseline[checkName]) && isOomFailure(postCodemod[checkName]),
+  );
+  if (oomChecks.length > 0) {
+    return {
+      verdict: "environment-limited",
+      reason: `Baseline and post-codemod ${oomChecks.join(
+        ", ",
+      )} checks both failed with out-of-memory errors on this host.`,
+    };
+  }
+
+  return {
+    verdict: "environment-limited",
+    reason:
+      "Requested checks did not fully pass on this host, but no baseline-to-post regression was detected.",
+  };
+}
+
 export function buildWorkflowRunCommand({
   workflowPath,
   targetPath,
@@ -203,6 +272,8 @@ async function main() {
       test: false,
       any: false,
     },
+    verdict: "environment-limited",
+    reason: "Evaluation is incomplete.",
   };
 
   if (options.compileCmd) {
@@ -236,12 +307,21 @@ async function main() {
     baseline: summary.baseline,
     postCodemod: summary.post_codemod,
   });
+  const requested = requestedChecksFromOptions(options);
+  const verdictSummary = buildVerdictSummary({
+    baseline: summary.baseline,
+    postCodemod: summary.post_codemod,
+    regression: summary.regression,
+    requested,
+  });
+  summary.verdict = verdictSummary.verdict;
+  summary.reason = verdictSummary.reason;
 
   const summaryPath = path.join(target, "evaluation-summary.json");
   await fs.writeFile(summaryPath, JSON.stringify(summary, null, 2), "utf8");
 
   process.stdout.write(`Wrote evaluation summary: ${summaryPath}\n`);
-  if (summary.regression.any) {
+  if (summary.verdict === "regression") {
     process.exitCode = 3;
   }
 }

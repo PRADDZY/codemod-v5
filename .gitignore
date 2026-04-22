@@ -32,3 +32,4 @@ Thumbs.db
 migration-report.json
 evaluation-summary.json
 .codemod-eval/
+.codemod-eval-*/
