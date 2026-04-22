@@ -3,8 +3,12 @@ import {
   buildVerdictSummary,
   buildRegressionSummary,
   buildWorkflowRunCommand,
+  finalizeSummaryFromAttempts,
+  parseMemoryTiers,
   parseArgs,
+  resolveAttemptTiers,
   repoNameFromUrl,
+  shouldRetryWithNextTier,
 } from "../scripts/evaluate-repo.js";
 
 describe("evaluate-repo argument parsing", () => {
@@ -39,6 +43,17 @@ describe("evaluate-repo argument parsing", () => {
     expect(parsed.workdir).toBe(".codemod-eval");
   });
 
+  it("parses memory tiers in repo-url mode", () => {
+    const parsed = parseArgs([
+      "--repo-url",
+      "https://github.com/OpenZeppelin/openzeppelin-contracts.git",
+      "--memory-tiers",
+      "4096, 6144, 4096",
+    ]);
+
+    expect(parsed.memoryTiers).toEqual([4096, 6144]);
+  });
+
   it("rejects ambiguous mode when both positional path and repo-url are provided", () => {
     expect(() =>
       parseArgs([
@@ -47,6 +62,12 @@ describe("evaluate-repo argument parsing", () => {
         "https://github.com/OpenZeppelin/openzeppelin-contracts.git",
       ]),
     ).toThrow("Use either <repoPath> or --repo-url");
+  });
+
+  it("rejects memory tiers when --repo-url mode is not used", () => {
+    expect(() =>
+      parseArgs(["./repo", "--memory-tiers", "4096,6144"]),
+    ).toThrow("--memory-tiers is supported only with --repo-url mode.");
   });
 });
 
@@ -158,5 +179,101 @@ describe("evaluate-repo helpers", () => {
 
     expect(verdict.verdict).toBe("environment-limited");
     expect(verdict.reason).toContain("out-of-memory");
+    expect(verdict.oomChecks).toEqual(["test"]);
+  });
+
+  it("parses and deduplicates memory tiers", () => {
+    expect(parseMemoryTiers("4096, 6144,4096")).toEqual([4096, 6144]);
+  });
+
+  it("resolves attempt tiers to a single default attempt when retries are disabled", () => {
+    expect(
+      resolveAttemptTiers({ repoUrl: null, memoryTiers: [4096, 6144] }),
+    ).toEqual([null]);
+  });
+
+  it("retries only for symmetric OOM environment-limited verdicts", () => {
+    const retryVerdict = buildVerdictSummary({
+      baseline: {
+        test: { status: 134, stderr: "heap out of memory" },
+      },
+      postCodemod: {
+        test: { status: 134, stderr: "Reached heap limit" },
+      },
+      regression: {
+        compile: false,
+        test: false,
+        any: false,
+      },
+      requested: {
+        compile: false,
+        test: true,
+      },
+    });
+    expect(shouldRetryWithNextTier(retryVerdict)).toBe(true);
+
+    const noRetryVerdict = buildVerdictSummary({
+      baseline: {
+        test: { status: 2, stderr: "Timeout" },
+      },
+      postCodemod: {
+        test: { status: 2, stderr: "Timeout" },
+      },
+      regression: {
+        compile: false,
+        test: false,
+        any: false,
+      },
+      requested: {
+        compile: false,
+        test: true,
+      },
+    });
+    expect(shouldRetryWithNextTier(noRetryVerdict)).toBe(false);
+  });
+
+  it("selects the last attempt as the authoritative summary", () => {
+    const initialSummary = {
+      target_path: "C:/tmp/repo",
+      repo_url: "https://github.com/example/repo.git",
+      ref: "main",
+      setup: {},
+      baseline: {},
+      codemod: null,
+      post_codemod: {},
+      regression: { compile: false, test: false, any: false },
+      attempts: [],
+      selected_attempt_index: null,
+      selected_tier_mb: null,
+      verdict: "environment-limited",
+      reason: "Evaluation is incomplete.",
+    };
+
+    const finalized = finalizeSummaryFromAttempts(initialSummary, [
+      {
+        memory_tier_mb: 4096,
+        baseline: { test: { status: 134 } },
+        codemod: { status: 0 },
+        post_codemod: { test: { status: 134 } },
+        regression: { compile: false, test: false, any: false },
+        verdict: "environment-limited",
+        reason: "OOM",
+      },
+      {
+        memory_tier_mb: 6144,
+        baseline: { test: { status: 0 } },
+        codemod: { status: 0 },
+        post_codemod: { test: { status: 0 } },
+        regression: { compile: false, test: false, any: false },
+        verdict: "pass",
+        reason: "All checks passed",
+      },
+    ]);
+
+    expect(finalized.verdict).toBe("pass");
+    expect(finalized.selected_attempt_index).toBe(1);
+    expect(finalized.selected_tier_mb).toBe(6144);
+    expect(finalized.attempts).toHaveLength(2);
+    expect(finalized.post_codemod.test.status).toBe(0);
   });
 });

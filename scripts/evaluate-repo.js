@@ -5,8 +5,16 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 
-function runShell(command, cwd) {
-  const result = spawnSync(command, { cwd, encoding: "utf8", shell: true });
+function runShell(command, cwd, envOverrides = {}) {
+  const result = spawnSync(command, {
+    cwd,
+    encoding: "utf8",
+    shell: true,
+    env: {
+      ...process.env,
+      ...envOverrides,
+    },
+  });
   return {
     command,
     status: result.status ?? 1,
@@ -35,6 +43,44 @@ export function repoNameFromUrl(repoUrl) {
   return candidate || "target-repo";
 }
 
+export function parseMemoryTiers(value) {
+  const raw = String(value ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  if (raw.length === 0) {
+    throw new Error("--memory-tiers requires at least one integer tier.");
+  }
+
+  const tiers = raw.map((entry) => {
+    const parsed = Number(entry);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      throw new Error(`Invalid memory tier value: ${entry}`);
+    }
+    return parsed;
+  });
+
+  return [...new Set(tiers)];
+}
+
+function buildMemoryEnv(memoryTierMb) {
+  if (!Number.isInteger(memoryTierMb) || memoryTierMb <= 0) {
+    return {};
+  }
+
+  const memoryFlag = `--max-old-space-size=${memoryTierMb}`;
+  const existing = process.env.NODE_OPTIONS?.trim();
+  if (!existing) {
+    return { NODE_OPTIONS: memoryFlag };
+  }
+
+  const merged = /\b--max-old-space-size=\d+\b/.test(existing)
+    ? existing.replace(/\b--max-old-space-size=\d+\b/, memoryFlag)
+    : `${memoryFlag} ${existing}`;
+  return { NODE_OPTIONS: merged };
+}
+
 export function parseArgs(argv) {
   const options = {
     targetPath: null,
@@ -43,6 +89,7 @@ export function parseArgs(argv) {
     compileCmd: null,
     testCmd: null,
     workdir: null,
+    memoryTiers: [],
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -72,6 +119,11 @@ export function parseArgs(argv) {
       index += 1;
       continue;
     }
+    if (current === "--memory-tiers") {
+      options.memoryTiers = parseMemoryTiers(argv[index + 1] ?? "");
+      index += 1;
+      continue;
+    }
     if (current.startsWith("--")) {
       throw new Error(`Unknown option: ${current}`);
     }
@@ -95,6 +147,9 @@ export function parseArgs(argv) {
   }
   if (options.repoUrl && !options.workdir) {
     options.workdir = ".codemod-eval";
+  }
+  if (options.memoryTiers.length > 0 && !options.repoUrl) {
+    throw new Error("--memory-tiers is supported only with --repo-url mode.");
   }
   return options;
 }
@@ -129,21 +184,35 @@ function requestedChecksFromOptions(options) {
   };
 }
 
+function getRequestedChecks(requested) {
+  return ["compile", "test"].filter((checkName) => requested[checkName]);
+}
+
+function getSymmetricOomChecks({ baseline, postCodemod, requested }) {
+  const checks = getRequestedChecks(requested);
+  return checks.filter(
+    (checkName) =>
+      isOomFailure(baseline[checkName]) && isOomFailure(postCodemod[checkName]),
+  );
+}
+
 export function buildVerdictSummary({ baseline, postCodemod, regression, requested }) {
   if (regression.any) {
     const regressedCheck = regression.compile ? "compile" : "test";
     return {
       verdict: "regression",
       reason: `Baseline ${regressedCheck} passed but post-codemod ${regressedCheck} failed.`,
+      oomChecks: [],
     };
   }
 
-  const checks = ["compile", "test"].filter((checkName) => requested[checkName]);
+  const checks = getRequestedChecks(requested);
 
   if (checks.length === 0) {
     return {
       verdict: "pass",
       reason: "No compile/test command provided for evaluation.",
+      oomChecks: [],
     };
   }
 
@@ -156,19 +225,22 @@ export function buildVerdictSummary({ baseline, postCodemod, regression, request
     return {
       verdict: "pass",
       reason: "All requested baseline and post-codemod checks passed.",
+      oomChecks: [],
     };
   }
 
-  const oomChecks = checks.filter(
-    (checkName) =>
-      isOomFailure(baseline[checkName]) && isOomFailure(postCodemod[checkName]),
-  );
+  const oomChecks = getSymmetricOomChecks({
+    baseline,
+    postCodemod,
+    requested,
+  });
   if (oomChecks.length > 0) {
     return {
       verdict: "environment-limited",
       reason: `Baseline and post-codemod ${oomChecks.join(
         ", ",
       )} checks both failed with out-of-memory errors on this host.`,
+      oomChecks,
     };
   }
 
@@ -176,7 +248,22 @@ export function buildVerdictSummary({ baseline, postCodemod, regression, request
     verdict: "environment-limited",
     reason:
       "Requested checks did not fully pass on this host, but no baseline-to-post regression was detected.",
+    oomChecks: [],
   };
+}
+
+export function shouldRetryWithNextTier(verdictSummary) {
+  return (
+    verdictSummary.verdict === "environment-limited" &&
+    (verdictSummary.oomChecks?.length ?? 0) > 0
+  );
+}
+
+export function resolveAttemptTiers({ repoUrl, memoryTiers }) {
+  if (repoUrl && memoryTiers.length > 0) {
+    return memoryTiers;
+  }
+  return [null];
 }
 
 export function buildWorkflowRunCommand({
@@ -238,6 +325,53 @@ async function resolveTargetFromRepoUrl({ repoUrl, ref, workdir }) {
   return { target, setup };
 }
 
+function makeAttemptSummary({
+  memoryTierMb,
+  baseline,
+  codemod,
+  postCodemod,
+  regression,
+  verdictSummary,
+}) {
+  return {
+    memory_tier_mb: memoryTierMb,
+    baseline,
+    codemod,
+    post_codemod: postCodemod,
+    regression,
+    verdict: verdictSummary.verdict,
+    reason: verdictSummary.reason,
+  };
+}
+
+export function finalizeSummaryFromAttempts(summary, attempts) {
+  if (attempts.length === 0) {
+    return summary;
+  }
+
+  const selectedAttemptIndex = attempts.length - 1;
+  const selectedAttempt = attempts[selectedAttemptIndex];
+  return {
+    ...summary,
+    attempts,
+    selected_attempt_index: selectedAttemptIndex,
+    selected_tier_mb: selectedAttempt.memory_tier_mb ?? null,
+    baseline: selectedAttempt.baseline,
+    codemod: selectedAttempt.codemod,
+    post_codemod: selectedAttempt.post_codemod,
+    regression: selectedAttempt.regression,
+    verdict: selectedAttempt.verdict,
+    reason: selectedAttempt.reason,
+  };
+}
+
+async function resetRepoToHead(target) {
+  const reset = runShell(`git -C "${target}" reset --hard HEAD`, process.cwd());
+  if (reset.status !== 0) {
+    throw new Error(reset.stderr || "Failed to reset repository between attempts.");
+  }
+}
+
 async function main() {
   const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   const options = parseArgs(process.argv.slice(2));
@@ -272,56 +406,113 @@ async function main() {
       test: false,
       any: false,
     },
+    attempts: [],
+    selected_attempt_index: null,
+    selected_tier_mb: null,
     verdict: "environment-limited",
     reason: "Evaluation is incomplete.",
   };
 
-  if (options.compileCmd) {
-    summary.baseline.compile = runShell(options.compileCmd, target);
-  }
-  if (options.testCmd) {
-    summary.baseline.test = runShell(options.testCmd, target);
-  }
-
-  const workflowInvocation = buildWorkflowRunCommand({
-    workflowPath: packageRoot,
-    targetPath: target,
-    dryRun: false,
-  });
-  summary.codemod = runShell(workflowInvocation.command, process.cwd());
-  if (summary.codemod.status !== 0) {
-    const summaryPath = path.join(target, "evaluation-summary.json");
-    await fs.writeFile(summaryPath, JSON.stringify(summary, null, 2), "utf8");
-    process.stderr.write(`Codemod execution failed. See: ${summaryPath}\n`);
-    process.exit(summary.codemod.status);
-  }
-
-  if (options.compileCmd) {
-    summary.post_codemod.compile = runShell(options.compileCmd, target);
-  }
-  if (options.testCmd) {
-    summary.post_codemod.test = runShell(options.testCmd, target);
-  }
-
-  summary.regression = buildRegressionSummary({
-    baseline: summary.baseline,
-    postCodemod: summary.post_codemod,
-  });
   const requested = requestedChecksFromOptions(options);
-  const verdictSummary = buildVerdictSummary({
-    baseline: summary.baseline,
-    postCodemod: summary.post_codemod,
-    regression: summary.regression,
-    requested,
-  });
-  summary.verdict = verdictSummary.verdict;
-  summary.reason = verdictSummary.reason;
+  const attemptTiers = resolveAttemptTiers(options);
+  const attempts = [];
+
+  for (let attemptIndex = 0; attemptIndex < attemptTiers.length; attemptIndex += 1) {
+    const memoryTierMb = attemptTiers[attemptIndex];
+    const commandEnv = buildMemoryEnv(memoryTierMb);
+
+    if (attemptIndex > 0 && options.repoUrl) {
+      await resetRepoToHead(target);
+    }
+
+    const baseline = {};
+    const postCodemod = {};
+    const emptyRegression = {
+      compile: false,
+      test: false,
+      any: false,
+    };
+
+    if (options.compileCmd) {
+      baseline.compile = runShell(options.compileCmd, target, commandEnv);
+    }
+    if (options.testCmd) {
+      baseline.test = runShell(options.testCmd, target, commandEnv);
+    }
+
+    const workflowInvocation = buildWorkflowRunCommand({
+      workflowPath: packageRoot,
+      targetPath: target,
+      dryRun: false,
+    });
+    const codemodResult = runShell(
+      workflowInvocation.command,
+      process.cwd(),
+      commandEnv,
+    );
+    if (codemodResult.status !== 0) {
+      attempts.push(
+        makeAttemptSummary({
+          memoryTierMb,
+          baseline,
+          codemod: codemodResult,
+          postCodemod,
+          regression: emptyRegression,
+          verdictSummary: {
+            verdict: "environment-limited",
+            reason: `Codemod execution failed with status ${codemodResult.status}.`,
+          },
+        }),
+      );
+
+      const failedSummary = finalizeSummaryFromAttempts(summary, attempts);
+      const summaryPath = path.join(target, "evaluation-summary.json");
+      await fs.writeFile(summaryPath, JSON.stringify(failedSummary, null, 2), "utf8");
+      process.stderr.write(`Codemod execution failed. See: ${summaryPath}\n`);
+      process.exit(codemodResult.status);
+    }
+
+    if (options.compileCmd) {
+      postCodemod.compile = runShell(options.compileCmd, target, commandEnv);
+    }
+    if (options.testCmd) {
+      postCodemod.test = runShell(options.testCmd, target, commandEnv);
+    }
+
+    const regression = buildRegressionSummary({
+      baseline,
+      postCodemod,
+    });
+    const verdictSummary = buildVerdictSummary({
+      baseline,
+      postCodemod,
+      regression,
+      requested,
+    });
+    attempts.push(
+      makeAttemptSummary({
+        memoryTierMb,
+        baseline,
+        codemod: codemodResult,
+        postCodemod,
+        regression,
+        verdictSummary,
+      }),
+    );
+
+    const hasNextTier = attemptIndex < attemptTiers.length - 1;
+    if (!hasNextTier || !shouldRetryWithNextTier(verdictSummary)) {
+      break;
+    }
+  }
+
+  const finalSummary = finalizeSummaryFromAttempts(summary, attempts);
 
   const summaryPath = path.join(target, "evaluation-summary.json");
-  await fs.writeFile(summaryPath, JSON.stringify(summary, null, 2), "utf8");
+  await fs.writeFile(summaryPath, JSON.stringify(finalSummary, null, 2), "utf8");
 
   process.stdout.write(`Wrote evaluation summary: ${summaryPath}\n`);
-  if (summary.verdict === "regression") {
+  if (finalSummary.verdict === "regression") {
     process.exitCode = 3;
   }
 }

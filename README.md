@@ -79,3 +79,11 @@ Optional repo-level evaluation:
 ```bash
 npm run evaluate -- ./target-repo --compile "forge build" --test "forge test"
 ```
+
+Repo-url evaluation with OOM retry tiers:
+
+```bash
+npm run evaluate -- --repo-url "https://github.com/OpenZeppelin/openzeppelin-contracts.git" --ref "v4.9.6" --compile "npm install --ignore-scripts && npm run compile" --test "npm test" --memory-tiers "4096,6144,8192"
+```
+
+`--memory-tiers` is available only with `--repo-url`.
