@@ -55,6 +55,11 @@ const IMPORT_REWRITE_RULES = [
     importTo: "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol",
   },
   {
+    id: "contracts_math_math_import",
+    importFrom: "@openzeppelin/contracts/math/Math.sol",
+    importTo: "@openzeppelin/contracts/utils/math/Math.sol",
+  },
+  {
     id: "contracts_upgradeable_security_reentrancyguard_import",
     importFrom:
       "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol",
@@ -72,6 +77,11 @@ const IMPORT_REWRITE_RULES = [
       "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol",
     importTo:
       "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol",
+  },
+  {
+    id: "contracts_upgradeable_math_math_import",
+    importFrom: "@openzeppelin/contracts-upgradeable/math/MathUpgradeable.sol",
+    importTo: "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol",
   },
   {
     id: "contracts_upgradeable_i_erc20_import",

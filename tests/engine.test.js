@@ -62,6 +62,32 @@ describe("applyCodemodToSource", () => {
     expect(result.metrics.todoMarkers).toBe(0);
   });
 
+  it("rewrites Math import paths for contracts and upgradeable packages", () => {
+    const input = [
+      'import "@openzeppelin/contracts/math/Math.sol";',
+      'import "@openzeppelin/contracts-upgradeable/math/MathUpgradeable.sol";',
+      "",
+    ].join("\n");
+
+    const result = applyCodemodToSource(input);
+
+    expect(result.changed).toBe(true);
+    expect(result.output).toContain(
+      'import "@openzeppelin/contracts/utils/math/Math.sol";',
+    );
+    expect(result.output).toContain(
+      'import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";',
+    );
+    expect(result.output).not.toContain(
+      'import "@openzeppelin/contracts/math/Math.sol";',
+    );
+    expect(result.output).not.toContain(
+      'import "@openzeppelin/contracts-upgradeable/math/MathUpgradeable.sol";',
+    );
+    expect(result.metrics.ruleHits.contracts_math_math_import).toBe(1);
+    expect(result.metrics.ruleHits.contracts_upgradeable_math_math_import).toBe(1);
+  });
+
   it("marks ownable constructor migration as TODO with category metadata", () => {
     const input = [
       'import "@openzeppelin/contracts/access/Ownable.sol";',

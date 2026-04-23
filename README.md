@@ -29,6 +29,7 @@ npx codemod@latest workflow run -w . -t /path/to/repo --no-interactive --allow-d
 - Safe import moves:
   - `@openzeppelin/contracts/security/ReentrancyGuard.sol` -> `@openzeppelin/contracts/utils/ReentrancyGuard.sol`
   - `@openzeppelin/contracts/security/Pausable.sol` -> `@openzeppelin/contracts/utils/Pausable.sol`
+  - `@openzeppelin/contracts/math/Math.sol` -> `@openzeppelin/contracts/utils/math/Math.sol`
   - draft ERC20 permit imports to their v5 paths
 - Upgradeable import moves for the same safe path changes
 - Allowlisted upgradeable symbol rewrites when the corresponding import rewrite is safe:
