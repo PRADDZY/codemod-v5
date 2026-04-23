@@ -19,7 +19,8 @@
     "workflow:validate": "npx codemod@latest workflow validate -w .",
     "workflow:run": "npx codemod@latest workflow run -w .",
     "codemod": "npx codemod@latest workflow run -w .",
-    "evaluate": "node ./scripts/evaluate-repo.js"
+    "evaluate": "node ./scripts/evaluate-repo.js",
+    "evaluate:matrix": "node ./scripts/full-matrix-evaluate.js"
   },
   "keywords": [
     "codemod",
