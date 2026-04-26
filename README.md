@@ -75,6 +75,17 @@ npx codemod@latest publish
 npm test
 ```
 
+Kaggle full-matrix evaluation (compile + test across all benchmark repos):
+
+```bash
+export CODEMOD_API_KEY="..."
+npm run evaluate:matrix -- --mode full --workdir .codemod-eval-final --memory-tiers 4096,6144,8192,12288
+```
+
+Notebook option for Kaggle runtime:
+
+- `kaggle_full_verdict.ipynb`
+
 Optional repo-level evaluation:
 
 ```bash

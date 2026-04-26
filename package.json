@@ -20,7 +20,9 @@
     "workflow:run": "npx codemod@latest workflow run -w .",
     "codemod": "npx codemod@latest workflow run -w .",
     "evaluate": "node ./scripts/evaluate-repo.js",
-    "evaluate:matrix": "node ./scripts/full-matrix-evaluate.js"
+    "evaluate:matrix": "node ./scripts/full-matrix-evaluate.js",
+    "evidence:ai": "node ./scripts/run-ai-proof.js",
+    "evidence:hackathon": "node ./scripts/hackathon-evidence.js"
   },
   "keywords": [
     "codemod",
