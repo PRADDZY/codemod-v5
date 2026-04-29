@@ -22,7 +22,8 @@
     "evaluate": "node ./scripts/evaluate-repo.js",
     "evaluate:matrix": "node ./scripts/full-matrix-evaluate.js",
     "evidence:ai": "node ./scripts/run-ai-proof.js",
-    "evidence:hackathon": "node ./scripts/hackathon-evidence.js"
+    "evidence:hackathon": "node ./scripts/hackathon-evidence.js",
+    "evidence:submission": "node ./scripts/submission-pack.js"
   },
   "keywords": [
     "codemod",

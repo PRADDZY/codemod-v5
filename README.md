@@ -82,6 +82,12 @@ export CODEMOD_API_KEY="..."
 npm run evaluate:matrix -- --mode full --workdir .codemod-eval-final --memory-tiers 4096,6144,8192,12288
 ```
 
+Build the final submission payload files (`metrics.json`, draft markdowns, and payload JSON):
+
+```bash
+npm run evidence:submission
+```
+
 Notebook option for Kaggle runtime:
 
 - `kaggle_full_verdict.ipynb`

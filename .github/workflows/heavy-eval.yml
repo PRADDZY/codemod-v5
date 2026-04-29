@@ -75,6 +75,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: heavy-matrix-eval
-          path: codemod-eval-ci
-          include-hidden-files: true
+          path: |
+            codemod-eval-ci/verdict-summary.json
+            codemod-eval-ci/runs-evidence.tar.gz
+            codemod-eval-ci/logs/*.log
+            codemod-eval-ci/*/evaluation-summary.json
+          retention-days: 14
           if-no-files-found: error
