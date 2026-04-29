@@ -7,7 +7,8 @@ import { spawnSync } from "node:child_process";
 import { parseMemoryTiers, repoNameFromUrl } from "./evaluate-repo.js";
 
 const DEFAULT_WORKDIR = ".codemod-eval-final";
-const DEFAULT_MEMORY_TIERS = [4096, 6144, 8192, 12288];
+const DEFAULT_MEMORY_TIERS = [4096, 6144, 8192, 12288, 16384];
+const DEFAULT_HARDHAT_SHARD_SIZE = 20;
 const VALID_MODES = new Set(["full", "mixed", "smoke"]);
 
 const TARGETS = [
@@ -34,34 +35,41 @@ const TARGETS = [
   },
 ];
 
-const WRAPPER_SCRIPTS = {
-  "foundry_compile.sh": [
-    "#!/usr/bin/env bash",
-    "set -euo pipefail",
-    "git submodule update --init --recursive",
-    "forge build",
-    "",
-  ].join("\n"),
-  "foundry_test.sh": [
-    "#!/usr/bin/env bash",
-    "set -euo pipefail",
-    "forge test",
-    "",
-  ].join("\n"),
-  "oz_compile.sh": [
-    "#!/usr/bin/env bash",
-    "set -euo pipefail",
-    "npm install",
-    "npm run compile",
-    "",
-  ].join("\n"),
-  "oz_test.sh": [
-    "#!/usr/bin/env bash",
-    "set -euo pipefail",
-    "npm test",
-    "",
-  ].join("\n"),
-};
+function buildWrapperScripts({ packageRoot, hardhatShardSize }) {
+  const hardhatShardRunner = path
+    .join(packageRoot, "scripts", "run-hardhat-sharded-tests.js")
+    .replace(/\\/g, "/")
+    .replace(/"/g, '\\"');
+
+  return {
+    "foundry_compile.sh": [
+      "#!/usr/bin/env bash",
+      "set -euo pipefail",
+      "git submodule update --init --recursive",
+      "forge build",
+      "",
+    ].join("\n"),
+    "foundry_test.sh": [
+      "#!/usr/bin/env bash",
+      "set -euo pipefail",
+      "forge test",
+      "",
+    ].join("\n"),
+    "oz_compile.sh": [
+      "#!/usr/bin/env bash",
+      "set -euo pipefail",
+      "npm install",
+      "npm run compile",
+      "",
+    ].join("\n"),
+    "oz_test.sh": [
+      "#!/usr/bin/env bash",
+      "set -euo pipefail",
+      `node "${hardhatShardRunner}" --chunk-size ${hardhatShardSize}`,
+      "",
+    ].join("\n"),
+  };
+}
 
 function runCommand(command, args, { cwd, env } = {}) {
   const result = spawnSync(command, args, {
@@ -102,6 +110,7 @@ export function shouldRunTargetTests(mode, targetName) {
 export function summarizeEvaluationDoc({
   targetName,
   evaluationExitCode,
+  evaluationDurationMs,
   doc,
 }) {
   if (!doc) {
@@ -116,6 +125,7 @@ export function summarizeEvaluationDoc({
       post_compile: null,
       post_test: null,
       evaluation_exit_code: evaluationExitCode,
+      evaluation_duration_ms: evaluationDurationMs,
     };
   }
 
@@ -130,6 +140,7 @@ export function summarizeEvaluationDoc({
     post_compile: safeStatus(doc, "post_codemod", "compile"),
     post_test: safeStatus(doc, "post_codemod", "test"),
     evaluation_exit_code: evaluationExitCode,
+    evaluation_duration_ms: evaluationDurationMs,
   };
 }
 
@@ -138,6 +149,7 @@ export function parseMatrixArgs(argv) {
     mode: "full",
     workdir: DEFAULT_WORKDIR,
     memoryTiers: [...DEFAULT_MEMORY_TIERS],
+    hardhatShardSize: DEFAULT_HARDHAT_SHARD_SIZE,
     help: false,
   };
 
@@ -162,6 +174,17 @@ export function parseMatrixArgs(argv) {
       index += 1;
       continue;
     }
+    if (current === "--hardhat-shard-size") {
+      const parsed = Number(argv[index + 1] ?? "");
+      if (!Number.isInteger(parsed) || parsed <= 0) {
+        throw new Error(
+          `Invalid --hardhat-shard-size value: ${argv[index + 1] ?? ""}`,
+        );
+      }
+      options.hardhatShardSize = parsed;
+      index += 1;
+      continue;
+    }
     throw new Error(`Unknown option: ${current}`);
   }
 
@@ -181,21 +204,22 @@ export function parseMatrixArgs(argv) {
 function buildUsageText() {
   return [
     "Usage:",
-    "  node ./scripts/full-matrix-evaluate.js [--mode full|mixed|smoke] [--workdir <dir>] [--memory-tiers <csv>]",
+    "  node ./scripts/full-matrix-evaluate.js [--mode full|mixed|smoke] [--workdir <dir>] [--memory-tiers <csv>] [--hardhat-shard-size <n>]",
     "",
     "Examples:",
-    "  node ./scripts/full-matrix-evaluate.js --mode full --memory-tiers 4096,6144,8192,12288",
+    "  node ./scripts/full-matrix-evaluate.js --mode full --memory-tiers 4096,6144,8192,12288,16384",
     "  node ./scripts/full-matrix-evaluate.js --mode smoke --workdir .codemod-eval-smoke",
+    "  node ./scripts/full-matrix-evaluate.js --mode full --hardhat-shard-size 20",
     "",
     "Environment:",
     "  CODEMOD_API_KEY must be set.",
   ].join("\n");
 }
 
-async function writeWrapperScripts(opscriptsDir) {
+async function writeWrapperScripts(opscriptsDir, scripts) {
   await fs.mkdir(opscriptsDir, { recursive: true });
   await Promise.all(
-    Object.entries(WRAPPER_SCRIPTS).map(async ([name, body]) => {
+    Object.entries(scripts).map(async ([name, body]) => {
       const target = path.join(opscriptsDir, name);
       await fs.writeFile(target, body, "utf8");
       await fs.chmod(target, 0o755);
@@ -268,10 +292,14 @@ async function main() {
   const workdir = path.resolve(options.workdir);
   const logsDir = path.join(workdir, "logs");
   const opscriptsDir = path.join(workdir, "op-scripts");
+  const wrapperScripts = buildWrapperScripts({
+    packageRoot,
+    hardhatShardSize: options.hardhatShardSize,
+  });
 
   await fs.mkdir(workdir, { recursive: true });
   await fs.mkdir(logsDir, { recursive: true });
-  await writeWrapperScripts(opscriptsDir);
+  await writeWrapperScripts(opscriptsDir, wrapperScripts);
 
   const rows = [];
   const summaryPaths = [];
@@ -298,10 +326,12 @@ async function main() {
       args.push("--test", testWrapper);
     }
 
+    const startTime = Date.now();
     const evalRun = runCommand("node", args, {
       cwd: packageRoot,
       env: process.env,
     });
+    const evaluationDurationMs = Date.now() - startTime;
 
     const logPath = path.join(logsDir, `${target.name}.log`);
     await fs.writeFile(
@@ -325,6 +355,7 @@ async function main() {
       summarizeEvaluationDoc({
         targetName: target.name,
         evaluationExitCode: evalRun.status,
+        evaluationDurationMs,
         doc: targetSummary,
       }),
     );
@@ -337,6 +368,7 @@ async function main() {
   const verdictSummary = {
     mode: options.mode,
     memory_tiers_mb: options.memoryTiers,
+    hardhat_shard_size: options.hardhatShardSize,
     generated_at: new Date().toISOString(),
     targets: rows,
   };

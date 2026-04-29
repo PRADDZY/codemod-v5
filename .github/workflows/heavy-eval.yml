@@ -1,0 +1,71 @@
+name: Heavy Matrix Eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Evaluation mode"
+        required: true
+        default: "full"
+        type: choice
+        options:
+          - full
+          - mixed
+          - smoke
+      memory_tiers:
+        description: "Comma-separated memory tiers in MB"
+        required: true
+        default: "4096,6144,8192,12288,16384"
+      hardhat_shard_size:
+        description: "Hardhat test shard size"
+        required: true
+        default: "20"
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    env:
+      CODEMOD_API_KEY: ${{ secrets.CODEMOD_API_KEY }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Verify toolchain
+        run: |
+          node --version
+          npm --version
+          forge --version
+
+      - name: Run heavy matrix evaluation
+        run: |
+          npm run evaluate:matrix -- \
+            --mode "${{ inputs.mode }}" \
+            --memory-tiers "${{ inputs.memory_tiers }}" \
+            --hardhat-shard-size "${{ inputs.hardhat_shard_size }}" \
+            --workdir ".codemod-eval-ci"
+
+      - name: Upload evaluation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: heavy-matrix-eval
+          path: .codemod-eval-ci
+          if-no-files-found: error

@@ -6,20 +6,29 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 
 function runShell(command, cwd, envOverrides = {}) {
+  const mergedEnv = {
+    ...process.env,
+    ...envOverrides,
+  };
+  const startedAt = new Date().toISOString();
+  const startedMs = Date.now();
   const result = spawnSync(command, {
     cwd,
     encoding: "utf8",
     shell: true,
-    env: {
-      ...process.env,
-      ...envOverrides,
-    },
+    env: mergedEnv,
   });
+  const finishedAt = new Date().toISOString();
   return {
     command,
+    cwd,
     status: result.status ?? 1,
     stdout: result.stdout ?? "",
     stderr: result.stderr ?? "",
+    started_at: startedAt,
+    finished_at: finishedAt,
+    duration_ms: Date.now() - startedMs,
+    node_options: mergedEnv.NODE_OPTIONS ?? null,
   };
 }
 
@@ -326,7 +335,9 @@ async function resolveTargetFromRepoUrl({ repoUrl, ref, workdir }) {
 }
 
 function makeAttemptSummary({
+  attemptIndex,
   memoryTierMb,
+  nodeOptions,
   baseline,
   codemod,
   postCodemod,
@@ -334,7 +345,9 @@ function makeAttemptSummary({
   verdictSummary,
 }) {
   return {
+    attempt_index: attemptIndex,
     memory_tier_mb: memoryTierMb,
+    node_options: nodeOptions ?? null,
     baseline,
     codemod,
     post_codemod: postCodemod,
@@ -392,6 +405,9 @@ async function main() {
   if (!(await pathExists(target))) {
     throw new Error(`Target path does not exist: ${target}`);
   }
+  if (options.repoUrl) {
+    await resetRepoToHead(target);
+  }
 
   const summary = {
     target_path: target,
@@ -420,6 +436,10 @@ async function main() {
   for (let attemptIndex = 0; attemptIndex < attemptTiers.length; attemptIndex += 1) {
     const memoryTierMb = attemptTiers[attemptIndex];
     const commandEnv = buildMemoryEnv(memoryTierMb);
+    const nodeOptions = commandEnv.NODE_OPTIONS ?? process.env.NODE_OPTIONS ?? null;
+    process.stdout.write(
+      `[evaluate-repo] attempt=${attemptIndex + 1}/${attemptTiers.length} memory_tier_mb=${memoryTierMb ?? "default"} node_options="${nodeOptions ?? ""}"\n`,
+    );
 
     if (attemptIndex > 0 && options.repoUrl) {
       await resetRepoToHead(target);
@@ -453,7 +473,9 @@ async function main() {
     if (codemodResult.status !== 0) {
       attempts.push(
         makeAttemptSummary({
+          attemptIndex,
           memoryTierMb,
+          nodeOptions,
           baseline,
           codemod: codemodResult,
           postCodemod,
@@ -491,7 +513,9 @@ async function main() {
     });
     attempts.push(
       makeAttemptSummary({
+        attemptIndex,
         memoryTierMb,
+        nodeOptions,
         baseline,
         codemod: codemodResult,
         postCodemod,
