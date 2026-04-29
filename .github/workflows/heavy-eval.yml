@@ -60,12 +60,21 @@ jobs:
             --mode "${{ inputs.mode }}" \
             --memory-tiers "${{ inputs.memory_tiers }}" \
             --hardhat-shard-size "${{ inputs.hardhat_shard_size }}" \
-            --workdir ".codemod-eval-ci"
+            --workdir "codemod-eval-ci"
+
+      - name: Verify evaluation outputs
+        if: always()
+        run: |
+          pwd
+          ls -la
+          ls -la codemod-eval-ci || true
+          find codemod-eval-ci -maxdepth 3 -type f | head -200 || true
 
       - name: Upload evaluation artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: heavy-matrix-eval
-          path: .codemod-eval-ci
+          path: codemod-eval-ci
+          include-hidden-files: true
           if-no-files-found: error
