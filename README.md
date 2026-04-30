@@ -24,6 +24,13 @@ Optional AI follow-up for unresolved TODOs:
 npx codemod@latest workflow run -w . -t /path/to/repo --no-interactive --allow-dirty --allow-fs --param aiReview=true
 ```
 
+Quick path (run in under a minute on a prepared repo):
+
+```bash
+npx codemod@latest workflow run -w . -t /path/to/repo --no-interactive --allow-dirty --allow-fs --dry-run
+npx codemod@latest workflow run -w . -t /path/to/repo --no-interactive --allow-dirty --allow-fs
+```
+
 ## Coverage
 
 - Safe import moves:
@@ -97,6 +104,28 @@ npm run evidence:submission:final
 ```
 
 `evidence:submission:final` expects `heavy-matrix-eval-slim` (portable subset from the successful heavy-matrix artifact).
+
+Proof quick path:
+
+```bash
+npm ci
+npm test
+npm run evidence:ai -- --target .codemod-eval-final/openzeppelin-contracts-upgradeable --workflow-path . --output .codemod-eval-final/ai-proof-summary.json
+npm run evidence:hackathon -- --workdirs .codemod-eval-final,.codemod-eval --ai-proof .codemod-eval-final/ai-proof-summary.json --output .codemod-eval-final/hackathon-requirements.json
+export SUBMISSION_DEMO_URL="https://<your-demo-video-url>"
+export SUBMISSION_CASE_STUDY_URL="https://<your-case-study-url>"
+npm run evidence:submission:final
+```
+
+Canonical submission evidence files:
+
+- `docs/submission/metrics.json`
+- `docs/submission/dorahacks_submission_final.md`
+- `docs/submission/dorahacks_form_payload.md`
+- `docs/submission/evidence_sources.md`
+- `docs/submission/evidence_manifest.json`
+- `heavy-matrix-eval-slim/verdict-summary.json`
+- `heavy-matrix-eval-slim/*/evaluation-summary.json`
 
 Notebook option for Kaggle runtime:
 

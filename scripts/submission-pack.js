@@ -286,7 +286,7 @@ function buildDoraDraft({ metrics, primaryEvidence }) {
     : "No evaluation summary loaded. Run evaluation first.";
 
   return [
-    "# DoraHacks Submission Draft",
+    "# DoraHacks Submission",
     "",
     "## Summary",
     "Automates OpenZeppelin import migration using Codemod workflow + AI review for edge-case handling.",
@@ -310,6 +310,12 @@ function buildDoraDraft({ metrics, primaryEvidence }) {
     }`,
     `- TODO delta: ${metrics.ai_proof.todo_delta ?? "n/a"}`,
     "",
+    "## Judge Quick Checks",
+    "- Real world migration scope: OpenZeppelin v5 Solidity import-path changes in public repos.",
+    "- Deterministic automation: workflow applies only allowlisted safe rewrites and preserves unresolved TODO markers.",
+    "- AI usage is evidence-backed: AI review command output captured with before/after TODO counts and workflow exit status.",
+    "- Regression guard: baseline vs post-codemod compile/test status captured across multiple public repositories.",
+    "",
     "## Links",
     `- GitHub: ${metrics.links.github_repo}`,
     `- Codemod Registry: ${metrics.links.codemod_registry}`,
@@ -317,13 +323,21 @@ function buildDoraDraft({ metrics, primaryEvidence }) {
     `- Demo video: ${metrics.links.demo_video_url ?? "not provided"}`,
     `- Medium case study: ${metrics.links.case_study_url ?? "not provided"}`,
     "",
+    "## Evidence Pointers",
+    "- docs/submission/metrics.json",
+    "- docs/submission/evidence_manifest.json",
+    "- heavy-matrix-eval-slim/verdict-summary.json",
+    "- heavy-matrix-eval-slim/*/evaluation-summary.json",
+    "",
     "## Reproduction Commands",
     "```bash",
     "npm ci",
     "npm test",
     "npm run evidence:ai -- --target .codemod-eval-final/openzeppelin-contracts-upgradeable --workflow-path . --output .codemod-eval-final/ai-proof-summary.json",
     "npm run evidence:hackathon -- --workdirs .codemod-eval-final,.codemod-eval --ai-proof .codemod-eval-final/ai-proof-summary.json --output .codemod-eval-final/hackathon-requirements.json",
-    "npm run evidence:submission",
+    "export SUBMISSION_DEMO_URL=\"https://<demo-url>\"",
+    "export SUBMISSION_CASE_STUDY_URL=\"https://<case-study-url>\"",
+    "npm run evidence:submission:final",
     "```",
     "",
   ].join("\n");
@@ -375,30 +389,88 @@ function buildDemoRunbook() {
     "2. Run workflow with explicit target path.",
     "3. Show generated migration report and AI proof summary.",
     "4. Run compile/test evidence command.",
-    "5. Open `submission-pack/dorahacks_submission_draft.md` and highlight requirement mapping.",
+    "5. Open `docs/submission/dorahacks_submission_final.md` and highlight requirement mapping.",
     "",
     "Suggested terminal sequence:",
     "```bash",
     "npm test",
     "npm run evidence:ai -- --target .codemod-eval-final/openzeppelin-contracts-upgradeable --workflow-path . --output .codemod-eval-final/ai-proof-summary.json",
     "npm run evidence:hackathon -- --workdirs .codemod-eval-final,.codemod-eval --ai-proof .codemod-eval-final/ai-proof-summary.json --output .codemod-eval-final/hackathon-requirements.json",
-    "npm run evidence:submission",
+    "export SUBMISSION_DEMO_URL=\"https://<demo-url>\"",
+    "export SUBMISSION_CASE_STUDY_URL=\"https://<case-study-url>\"",
+    "npm run evidence:submission:final",
     "```",
     "",
   ].join("\n");
 }
 
-function buildCompetitorGapNotes() {
+function buildCompetitorGapNotes(metrics) {
+  const evidenceRows = metrics.real_repo_evidence
+    .map(
+      (entry) =>
+        `| ${entry.target} | ${displayStatus(entry.baseline_compile)} | ${displayStatus(
+          entry.baseline_test,
+        )} | ${displayStatus(entry.post_compile)} | ${displayStatus(
+          entry.post_test,
+        )} | ${entry.regression_any === true ? "true" : "false"} | ${
+          entry.verdict ?? "n/a"
+        } |`,
+    )
+    .join("\n");
+
   return [
-    "# Submission Gap Checklist",
+    "# Submission Differentiation Notes",
     "",
-    "Use this as a hard checklist against other entries:",
-    "- Show baseline vs post-codemod comparison in one table.",
-    "- Include exact reproduction commands and versions.",
-    "- Include AI step proof output, not just a claim.",
-    "- Use a real public repository, not a toy sample only.",
-    "- Include failure-mode notes when applicable (for example, environment-limited vs regression).",
-    "- Add short demo video with timestamps aligned to requirement proof.",
+    "## Comparison Matrix",
+    "| Judge Check | Weak Submission Pattern | This Submission Evidence |",
+    "|---|---|---|",
+    "| Real migration scope | Toy sample only | OpenZeppelin v5 import migration tested on public repos (`heavy-matrix-eval-slim/*/evaluation-summary.json`) |",
+    "| Deterministic codemod behavior | Broad AI-only patching | Allowlisted safe rewrites + explicit unresolved TODO markers (`workflow.yaml`, `migration-report.json`) |",
+    "| AI edge-case handling | AI mentioned without measurable output | AI proof JSON with workflow exit status and TODO counts (`.codemod-eval-final/ai-proof-summary.json`) |",
+    "| Regression control | No baseline/post comparison | Baseline vs post compile/test table in `dorahacks_submission_final.md` and metrics JSON |",
+    "| Reproducibility | Missing run commands | Full command chain in `README.md` and `docs/submission/evidence_sources.md` |",
+    "",
+    "## Baseline vs Post Snapshot",
+    "| Target | Baseline Compile | Baseline Test | Post Compile | Post Test | Regression | Verdict |",
+    "|---|---:|---:|---:|---:|---|---|",
+    evidenceRows,
+    "",
+  ].join("\n");
+}
+
+function buildEvidenceSources(metrics) {
+  const reproDemo =
+    metrics.links.demo_video_url ??
+    "https://github.com/PRADDZY/codemod-v5/actions";
+  const reproCaseStudy =
+    metrics.links.case_study_url ??
+    "https://github.com/PRADDZY/codemod-v5/blob/main/docs/submission/medium_case_study_final.md";
+  return [
+    "# Evidence Sources",
+    "",
+    "## Canonical Links",
+    `- GitHub repository: ${metrics.links.github_repo}`,
+    `- Codemod registry: ${metrics.links.codemod_registry}`,
+    `- Demo video: ${reproDemo}`,
+    `- Case study: ${reproCaseStudy}`,
+    "",
+    "## Canonical Evidence Files",
+    "- docs/submission/metrics.json",
+    "- docs/submission/submission_payload.json",
+    "- docs/submission/evidence_manifest.json",
+    "- heavy-matrix-eval-slim/verdict-summary.json",
+    "- heavy-matrix-eval-slim/*/evaluation-summary.json",
+    "",
+    "## Reproduction Commands",
+    "```bash",
+    "npm ci",
+    "npm test",
+    "npm run evidence:ai -- --target .codemod-eval-final/openzeppelin-contracts-upgradeable --workflow-path . --output .codemod-eval-final/ai-proof-summary.json",
+    "npm run evidence:hackathon -- --workdirs .codemod-eval-final,.codemod-eval --ai-proof .codemod-eval-final/ai-proof-summary.json --output .codemod-eval-final/hackathon-requirements.json",
+    "export SUBMISSION_DEMO_URL=\"https://<demo-url>\"",
+    "export SUBMISSION_CASE_STUDY_URL=\"https://<case-study-url>\"",
+    "npm run evidence:submission:final",
+    "```",
     "",
   ].join("\n");
 }
@@ -431,6 +503,7 @@ function buildDoraFormPayload(metrics) {
     "## Evidence files",
     "- metrics.json",
     "- dorahacks_submission_final.md",
+    "- evidence_sources.md",
     "- evidence_manifest.json",
     "",
   ].join("\n");
@@ -599,7 +672,7 @@ async function main() {
     },
     {
       name: "competitor_gap_notes.md",
-      content: buildCompetitorGapNotes(),
+      content: buildCompetitorGapNotes(metrics),
     },
     {
       name: "dorahacks_form_payload.md",
@@ -612,6 +685,10 @@ async function main() {
     {
       name: "submission_payload.json",
       content: JSON.stringify(payload, null, 2),
+    },
+    {
+      name: "evidence_sources.md",
+      content: buildEvidenceSources(metrics),
     },
   ];
 

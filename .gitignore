@@ -36,3 +36,9 @@ evaluation-summary.json
 
 # submission evidence exceptions
 !heavy-matrix-eval-slim/**/evaluation-summary.json
+
+# local scratch artifacts
+.tmp-vm/
+logs_*/
+tmp-*.sh
+colab_full_verdict.ipynb
