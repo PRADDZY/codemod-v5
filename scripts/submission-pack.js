@@ -12,6 +12,8 @@ const DEFAULT_REPO_URL = "https://github.com/PRADDZY/codemod-v5";
 const DEFAULT_REGISTRY_URL =
   "https://app.codemod.com/registry/%40praddzy/openzeppelin-v5-safe-imports";
 const DEFAULT_PACKAGE_NAME = "@praddzy/openzeppelin-v5-safe-imports";
+const DEFAULT_DEMO_URL = "";
+const DEFAULT_CASE_STUDY_URL = "";
 
 export function parseSubmissionPackArgs(argv) {
   const options = {
@@ -22,6 +24,10 @@ export function parseSubmissionPackArgs(argv) {
     repoUrl: DEFAULT_REPO_URL,
     registryUrl: DEFAULT_REGISTRY_URL,
     packageName: DEFAULT_PACKAGE_NAME,
+    demoUrl: process.env.SUBMISSION_DEMO_URL ?? DEFAULT_DEMO_URL,
+    caseStudyUrl:
+      process.env.SUBMISSION_CASE_STUDY_URL ?? DEFAULT_CASE_STUDY_URL,
+    strictLinks: false,
     help: false,
   };
 
@@ -66,6 +72,20 @@ export function parseSubmissionPackArgs(argv) {
       index += 1;
       continue;
     }
+    if (current === "--demo-url") {
+      options.demoUrl = argv[index + 1] ?? DEFAULT_DEMO_URL;
+      index += 1;
+      continue;
+    }
+    if (current === "--case-study-url") {
+      options.caseStudyUrl = argv[index + 1] ?? DEFAULT_CASE_STUDY_URL;
+      index += 1;
+      continue;
+    }
+    if (current === "--strict-links") {
+      options.strictLinks = true;
+      continue;
+    }
     if (current === "-h" || current === "--help") {
       options.help = true;
       continue;
@@ -98,10 +118,48 @@ function commandStatus(summary, section, key) {
   return typeof value === "number" ? value : null;
 }
 
+export function isValidHttpUrl(input) {
+  if (typeof input !== "string" || input.trim().length === 0) {
+    return false;
+  }
+  try {
+    const parsed = new URL(input);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+export function ensureRequiredLinks({ strictLinks, demoUrl, caseStudyUrl }) {
+  if (!strictLinks) {
+    return;
+  }
+  if (!isValidHttpUrl(demoUrl)) {
+    throw new Error(
+      "Missing or invalid demo URL. Provide --demo-url (or SUBMISSION_DEMO_URL).",
+    );
+  }
+  if (!isValidHttpUrl(caseStudyUrl)) {
+    throw new Error(
+      "Missing or invalid case-study URL. Provide --case-study-url (or SUBMISSION_CASE_STUDY_URL).",
+    );
+  }
+}
+
+function toPortablePath(inputPath) {
+  return inputPath.split(path.sep).join("/");
+}
+
+function toRepoRelativePath(inputPath) {
+  const absolute = path.resolve(inputPath);
+  const relative = path.relative(process.cwd(), absolute);
+  return toPortablePath(relative || ".");
+}
+
 export function summarizeEvaluationDoc({ target, summaryPath, doc }) {
   return {
     target,
-    summary_path: summaryPath,
+    summary_path: toRepoRelativePath(summaryPath),
     repo_url: doc?.repo_url ?? null,
     ref: doc?.ref ?? null,
     baseline_compile: commandStatus(doc, "baseline", "compile"),
@@ -256,8 +314,8 @@ function buildDoraDraft({ metrics, primaryEvidence }) {
     `- GitHub: ${metrics.links.github_repo}`,
     `- Codemod Registry: ${metrics.links.codemod_registry}`,
     `- Package: ${metrics.links.package_name}`,
-    "- Demo video: <add link>",
-    "- Medium case study: <add link>",
+    `- Demo video: ${metrics.links.demo_video_url ?? "not provided"}`,
+    `- Medium case study: ${metrics.links.case_study_url ?? "not provided"}`,
     "",
     "## Reproduction Commands",
     "```bash",
@@ -272,6 +330,7 @@ function buildDoraDraft({ metrics, primaryEvidence }) {
 }
 
 function buildMediumDraft(metrics) {
+  const primary = pickPrimaryEvidence(metrics.real_repo_evidence);
   return [
     "# Medium Case Study Draft",
     "",
@@ -292,10 +351,18 @@ function buildMediumDraft(metrics) {
     `- Real-repo summaries captured: ${metrics.real_repo_evidence.length}`,
     "",
     "## Results",
-    "Highlight one real repo where baseline and post-codemod checks are non-regressive (or fully passing) and include command logs.",
+    primary
+      ? `Primary run: ${primary.target} with baseline compile/test ${displayStatus(
+          primary.baseline_compile,
+        )}/${displayStatus(primary.baseline_test)} and post-codemod compile/test ${displayStatus(
+          primary.post_compile,
+        )}/${displayStatus(primary.post_test)} (verdict: ${
+          primary.verdict ?? "n/a"
+        }).`
+      : "No primary run selected.",
     "",
     "## Demo",
-    "Attach 60-90 second recording: before -> run codemod -> after -> tests.",
+    `Demo link: ${metrics.links.demo_video_url ?? "not provided"}`,
     "",
   ].join("\n");
 }
@@ -336,6 +403,72 @@ function buildCompetitorGapNotes() {
   ].join("\n");
 }
 
+function buildDoraFormPayload(metrics) {
+  const primary = pickPrimaryEvidence(metrics.real_repo_evidence);
+  return [
+    "# DoraHacks Form Payload",
+    "",
+    "## Title",
+    "OpenZeppelin v5 Safe Imports Codemod",
+    "",
+    "## One-liner",
+    "Codemod + AI workflow that automates OpenZeppelin Solidity import migration with real-repo evidence.",
+    "",
+    "## Core links",
+    `- GitHub: ${metrics.links.github_repo}`,
+    `- Registry: ${metrics.links.codemod_registry}`,
+    `- Demo video: ${metrics.links.demo_video_url ?? "not provided"}`,
+    `- Case study: ${metrics.links.case_study_url ?? "not provided"}`,
+    "",
+    "## Proof summary",
+    `- Requirement completion: ${metrics.hackathon_completion_percent}%`,
+    `- AI workflow status: ${metrics.ai_proof.workflow_status ?? "n/a"}`,
+    `- TODO before/after: ${metrics.ai_proof.todo_before ?? "n/a"} / ${
+      metrics.ai_proof.todo_after ?? "n/a"
+    }`,
+    `- Primary validation target: ${primary?.target ?? "n/a"}`,
+    "",
+    "## Evidence files",
+    "- metrics.json",
+    "- dorahacks_submission_final.md",
+    "- evidence_manifest.json",
+    "",
+  ].join("\n");
+}
+
+function buildFinalChecklist(metrics) {
+  const status = metrics.requirement_statuses;
+  const hasDemo = Boolean(metrics.links.demo_video_url);
+  const hasCaseStudy = Boolean(metrics.links.case_study_url);
+  return [
+    "# Final Submission Checklist",
+    "",
+    `- [${status.pick_real_world_upgrade === "completed" ? "x" : " "}] Real migration selected`,
+    `- [${status.build_codemods_to_automate === "completed" ? "x" : " "}] Codemod automation implemented`,
+    `- [${status.use_ai_for_edge_cases === "completed" ? "x" : " "}] AI edge-case flow included`,
+    `- [${status.prove_it_works_on_real_repo === "completed" ? "x" : " "}] Real repo proof included`,
+    `- [${metrics.ai_proof.workflow_status === 0 ? "x" : " "}] AI proof workflow status is passing`,
+    `- [${hasDemo ? "x" : " "}] Public demo video URL attached`,
+    `- [${hasCaseStudy ? "x" : " "}] Public case-study URL attached`,
+    "",
+    "Deadline reference from saved DoraHacks page: 2026-05-03 18:30 (submission close).",
+    "",
+  ].join("\n");
+}
+
+function buildDemoScript90s() {
+  return [
+    "# 90s Demo Script",
+    "",
+    "0-15s: show target repository baseline compile/test summary.",
+    "15-35s: run codemod workflow and show changed imports plus TODO markers.",
+    "35-55s: run AI proof + requirement evidence commands.",
+    "55-75s: show real-repo verdict table and zero-regression outcomes.",
+    "75-90s: open final checklist and submission payload files.",
+    "",
+  ].join("\n");
+}
+
 function buildSubmissionPayload({ metrics }) {
   return {
     generated_at: new Date().toISOString(),
@@ -357,6 +490,13 @@ function buildSubmissionPayload({ metrics }) {
       medium_case_study_markdown: "medium_case_study_draft.md",
       demo_runbook_markdown: "demo_runbook.md",
       competitor_gap_notes_markdown: "competitor_gap_notes.md",
+      dorahacks_submission_final_markdown: "dorahacks_submission_final.md",
+      medium_case_study_final_markdown: "medium_case_study_final.md",
+      dorahacks_form_payload_markdown: "dorahacks_form_payload.md",
+      demo_script_markdown: "demo_script_90s.md",
+      final_checklist_markdown: "final_checklist.md",
+      evidence_manifest_json: "evidence_manifest.json",
+      evidence_sources_markdown: "evidence_sources.md",
       metrics_json: "metrics.json",
     },
   };
@@ -388,10 +528,10 @@ async function loadEvaluationDocs(workdirs) {
 function buildUsageText() {
   return [
     "Usage:",
-    "  node ./scripts/submission-pack.js [--workdirs <dir1,dir2>] [--requirements <file>] [--ai-proof <file>] [--output-dir <dir>]",
+    "  node ./scripts/submission-pack.js [--workdirs <dir1,dir2>] [--requirements <file>] [--ai-proof <file>] [--output-dir <dir>] [--demo-url <url>] [--case-study-url <url>] [--strict-links]",
     "",
     "Example:",
-    "  node ./scripts/submission-pack.js --workdirs .codemod-eval-final,.codemod-eval --requirements ./.codemod-eval-final/hackathon-requirements.json --ai-proof ./.codemod-eval-final/ai-proof-summary.json --output-dir ./.codemod-eval-final/submission-pack",
+    "  node ./scripts/submission-pack.js --workdirs .codemod-eval-final,.codemod-eval --requirements ./.codemod-eval-final/hackathon-requirements.json --ai-proof ./.codemod-eval-final/ai-proof-summary.json --output-dir ./docs/submission --strict-links --demo-url https://example.com/demo --case-study-url https://example.com/case-study",
   ].join("\n");
 }
 
@@ -407,11 +547,14 @@ async function main() {
   const loadedDocs = await loadEvaluationDocs(options.workdirs);
   const evaluations = loadedDocs.map((entry) => summarizeEvaluationDoc(entry));
   const primaryEvidence = pickPrimaryEvidence(evaluations);
+  ensureRequiredLinks(options);
 
   const links = {
     github_repo: options.repoUrl,
     codemod_registry: options.registryUrl,
     package_name: options.packageName,
+    demo_video_url: options.demoUrl || null,
+    case_study_url: options.caseStudyUrl || null,
   };
   const metrics = buildMetrics({
     requirementsDoc,
@@ -435,7 +578,15 @@ async function main() {
       content: buildDoraDraft({ metrics, primaryEvidence }),
     },
     {
+      name: "dorahacks_submission_final.md",
+      content: buildDoraDraft({ metrics, primaryEvidence }),
+    },
+    {
       name: "medium_case_study_draft.md",
+      content: buildMediumDraft(metrics),
+    },
+    {
+      name: "medium_case_study_final.md",
       content: buildMediumDraft(metrics),
     },
     {
@@ -443,8 +594,20 @@ async function main() {
       content: buildDemoRunbook(),
     },
     {
+      name: "demo_script_90s.md",
+      content: buildDemoScript90s(),
+    },
+    {
       name: "competitor_gap_notes.md",
       content: buildCompetitorGapNotes(),
+    },
+    {
+      name: "dorahacks_form_payload.md",
+      content: buildDoraFormPayload(metrics),
+    },
+    {
+      name: "final_checklist.md",
+      content: buildFinalChecklist(metrics),
     },
     {
       name: "submission_payload.json",

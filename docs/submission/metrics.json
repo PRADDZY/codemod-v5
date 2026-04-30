@@ -1,0 +1,68 @@
+{
+  "generated_at": "2026-04-30T16:49:25.625Z",
+  "hackathon_completion_percent": 100,
+  "requirement_statuses": {
+    "pick_real_world_upgrade": "completed",
+    "build_codemods_to_automate": "completed",
+    "use_ai_for_edge_cases": "completed",
+    "prove_it_works_on_real_repo": "completed"
+  },
+  "ai_proof": {
+    "workflow_status": 0,
+    "todo_before": 151,
+    "todo_after": 151,
+    "todo_delta": 0,
+    "scanned_files": 530
+  },
+  "real_repo_evidence": [
+    {
+      "target": "foundry-defi-stablecoin-cu",
+      "summary_path": "heavy-matrix-eval-slim/foundry-defi-stablecoin-cu/evaluation-summary.json",
+      "repo_url": "https://github.com/Cyfrin/foundry-defi-stablecoin-cu.git",
+      "ref": "75c9add34c3e987812d96c93930fc821f4f9f9fb",
+      "baseline_compile": 0,
+      "baseline_test": 0,
+      "post_compile": 0,
+      "post_test": 0,
+      "regression_any": false,
+      "verdict": "pass",
+      "reason": "All requested baseline and post-codemod checks passed.",
+      "selected_tier_mb": 4096
+    },
+    {
+      "target": "openzeppelin-contracts",
+      "summary_path": "heavy-matrix-eval-slim/openzeppelin-contracts/evaluation-summary.json",
+      "repo_url": "https://github.com/OpenZeppelin/openzeppelin-contracts.git",
+      "ref": "dc44c9f1a4c3b10af99492eed84f83ed244203f6",
+      "baseline_compile": 0,
+      "baseline_test": 0,
+      "post_compile": 0,
+      "post_test": 0,
+      "regression_any": false,
+      "verdict": "pass",
+      "reason": "All requested baseline and post-codemod checks passed.",
+      "selected_tier_mb": 4096
+    },
+    {
+      "target": "openzeppelin-contracts-upgradeable",
+      "summary_path": "heavy-matrix-eval-slim/openzeppelin-contracts-upgradeable/evaluation-summary.json",
+      "repo_url": "https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable.git",
+      "ref": "2d081f24cac1a867f6f73d512f2022e1fa987854",
+      "baseline_compile": 0,
+      "baseline_test": 0,
+      "post_compile": 0,
+      "post_test": 0,
+      "regression_any": false,
+      "verdict": "pass",
+      "reason": "All requested baseline and post-codemod checks passed.",
+      "selected_tier_mb": 4096
+    }
+  ],
+  "links": {
+    "github_repo": "https://github.com/PRADDZY/codemod-v5",
+    "codemod_registry": "https://app.codemod.com/registry/%40praddzy/openzeppelin-v5-safe-imports",
+    "package_name": "@praddzy/openzeppelin-v5-safe-imports",
+    "demo_video_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160",
+    "case_study_url": "https://github.com/PRADDZY/codemod-v5/blob/main/docs/submission/medium_case_study_final.md"
+  }
+}

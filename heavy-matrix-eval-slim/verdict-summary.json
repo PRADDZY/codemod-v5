@@ -1,0 +1,53 @@
+{
+  "mode": "full",
+  "memory_tiers_mb": [
+    4096,
+    6144,
+    8192,
+    12288,
+    16384
+  ],
+  "hardhat_shard_size": 20,
+  "generated_at": "2026-04-29T13:16:39.076Z",
+  "targets": [
+    {
+      "repo": "foundry-defi-stablecoin-cu",
+      "summary_found": true,
+      "verdict": "pass",
+      "reason": "All requested baseline and post-codemod checks passed.",
+      "selected_tier_mb": 4096,
+      "baseline_compile": 0,
+      "baseline_test": 0,
+      "post_compile": 0,
+      "post_test": 0,
+      "evaluation_exit_code": 0,
+      "evaluation_duration_ms": 20828
+    },
+    {
+      "repo": "openzeppelin-contracts",
+      "summary_found": true,
+      "verdict": "pass",
+      "reason": "All requested baseline and post-codemod checks passed.",
+      "selected_tier_mb": 4096,
+      "baseline_compile": 0,
+      "baseline_test": 0,
+      "post_compile": 0,
+      "post_test": 0,
+      "evaluation_exit_code": 0,
+      "evaluation_duration_ms": 1277373
+    },
+    {
+      "repo": "openzeppelin-contracts-upgradeable",
+      "summary_found": true,
+      "verdict": "pass",
+      "reason": "All requested baseline and post-codemod checks passed.",
+      "selected_tier_mb": 4096,
+      "baseline_compile": 0,
+      "baseline_test": 0,
+      "post_compile": 0,
+      "post_test": 0,
+      "evaluation_exit_code": 0,
+      "evaluation_duration_ms": 2118762
+    }
+  ]
+}

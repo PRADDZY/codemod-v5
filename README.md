@@ -88,6 +88,16 @@ Build the final submission payload files (`metrics.json`, draft markdowns, and p
 npm run evidence:submission
 ```
 
+Strict final packaging to `docs/submission` (requires public links):
+
+```bash
+export SUBMISSION_DEMO_URL="https://<your-demo-video-url>"
+export SUBMISSION_CASE_STUDY_URL="https://<your-case-study-url>"
+npm run evidence:submission:final
+```
+
+`evidence:submission:final` expects `heavy-matrix-eval-slim` (portable subset from the successful heavy-matrix artifact).
+
 Notebook option for Kaggle runtime:
 
 - `kaggle_full_verdict.ipynb`

@@ -1,6 +1,9 @@
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildMetrics,
+  ensureRequiredLinks,
+  isValidHttpUrl,
   parseSubmissionPackArgs,
   pickPrimaryEvidence,
   summarizeEvaluationDoc,
@@ -14,6 +17,7 @@ describe("submission-pack argument parsing", () => {
     expect(parsed.aiProof).toBe(".codemod-eval-final/ai-proof-summary.json");
     expect(parsed.outputDir).toBe(".codemod-eval-final/submission-pack");
     expect(parsed.help).toBe(false);
+    expect(parsed.strictLinks).toBe(false);
   });
 
   it("parses explicit paths and links", () => {
@@ -32,6 +36,11 @@ describe("submission-pack argument parsing", () => {
       "https://app.codemod.com/registry/example",
       "--package-name",
       "@example/pkg",
+      "--demo-url",
+      "https://example.com/demo",
+      "--case-study-url",
+      "https://example.com/case-study",
+      "--strict-links",
     ]);
 
     expect(parsed.workdirs).toEqual([".runs", ".archive"]);
@@ -41,6 +50,9 @@ describe("submission-pack argument parsing", () => {
     expect(parsed.repoUrl).toBe("https://github.com/example/repo");
     expect(parsed.registryUrl).toBe("https://app.codemod.com/registry/example");
     expect(parsed.packageName).toBe("@example/pkg");
+    expect(parsed.demoUrl).toBe("https://example.com/demo");
+    expect(parsed.caseStudyUrl).toBe("https://example.com/case-study");
+    expect(parsed.strictLinks).toBe(true);
   });
 
   it("rejects unknown options", () => {
@@ -51,6 +63,25 @@ describe("submission-pack argument parsing", () => {
 });
 
 describe("submission-pack evidence synthesis", () => {
+  it("normalizes summary paths to repository relative form", () => {
+    const absoluteSummaryPath = path.resolve(
+      ".codemod-eval-final/repo-a/evaluation-summary.json",
+    );
+    const normalized = summarizeEvaluationDoc({
+      target: "repo-a",
+      summaryPath: absoluteSummaryPath,
+      doc: {
+        baseline: { compile: { status: 0 }, test: { status: 0 } },
+        post_codemod: { compile: { status: 0 }, test: { status: 0 } },
+        regression: { any: false },
+      },
+    });
+    expect(normalized.summary_path).toBe(
+      ".codemod-eval-final/repo-a/evaluation-summary.json",
+    );
+    expect(normalized.summary_path).toContain("evaluation-summary.json");
+  });
+
   it("normalizes evaluation summaries", () => {
     const normalized = summarizeEvaluationDoc({
       target: "repo-a",
@@ -140,5 +171,39 @@ describe("submission-pack evidence synthesis", () => {
     expect(metrics.requirement_statuses.prove_it_works_on_real_repo).toBe(
       "completed",
     );
+  });
+});
+
+describe("submission-pack link guards", () => {
+  it("validates http links", () => {
+    expect(isValidHttpUrl("https://example.com")).toBe(true);
+    expect(isValidHttpUrl("http://example.com")).toBe(true);
+    expect(isValidHttpUrl("not-a-url")).toBe(false);
+  });
+
+  it("requires links when strict mode is enabled", () => {
+    expect(() =>
+      ensureRequiredLinks({
+        strictLinks: true,
+        demoUrl: "",
+        caseStudyUrl: "https://example.com/case",
+      }),
+    ).toThrow("Missing or invalid demo URL");
+
+    expect(() =>
+      ensureRequiredLinks({
+        strictLinks: true,
+        demoUrl: "https://example.com/demo",
+        caseStudyUrl: "",
+      }),
+    ).toThrow("Missing or invalid case-study URL");
+
+    expect(() =>
+      ensureRequiredLinks({
+        strictLinks: true,
+        demoUrl: "https://example.com/demo",
+        caseStudyUrl: "https://example.com/case",
+      }),
+    ).not.toThrow();
   });
 });

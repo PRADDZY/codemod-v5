@@ -1,0 +1,44 @@
+{
+  "generated_at": "2026-04-30T16:48:00Z",
+  "repository": "https://github.com/PRADDZY/codemod-v5",
+  "workflow_evidence": {
+    "heavy_matrix_eval": {
+      "run_id": 25108419160,
+      "run_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160",
+      "artifact": {
+        "name": "heavy-matrix-eval",
+        "artifact_id": 6708051921,
+        "archive_download_url": "https://api.github.com/repos/PRADDZY/codemod-v5/actions/artifacts/6708051921/zip",
+        "digest": "sha256:adec29e9c458a6a9eae6427c44bf9628da67964ff31689b2d921a0aa9c990e21",
+        "size_bytes": 465438027,
+        "expires_at": "2026-07-28T12:19:19Z"
+      }
+    },
+    "verify_packaging": {
+      "run_id": 25117900139,
+      "run_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25117900139",
+      "conclusion": "success"
+    }
+  },
+  "local_backups": [
+    {
+      "file": "C:/Users/Pratik Daithankar/Downloads/heavy-matrix-eval.zip",
+      "size_bytes": 465438027
+    },
+    {
+      "file": "C:/Users/Pratik Daithankar/Downloads/logs_66702329523.zip",
+      "size_bytes": 24103
+    }
+  ],
+  "portable_evidence_files": [
+    "docs/submission/metrics.json",
+    "docs/submission/submission_payload.json",
+    "docs/submission/dorahacks_submission_final.md",
+    "docs/submission/dorahacks_form_payload.md",
+    "docs/submission/final_checklist.md",
+    "heavy-matrix-eval-slim/verdict-summary.json",
+    "heavy-matrix-eval-slim/foundry-defi-stablecoin-cu/evaluation-summary.json",
+    "heavy-matrix-eval-slim/openzeppelin-contracts/evaluation-summary.json",
+    "heavy-matrix-eval-slim/openzeppelin-contracts-upgradeable/evaluation-summary.json"
+  ]
+}

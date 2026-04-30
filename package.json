@@ -23,7 +23,8 @@
     "evaluate:matrix": "node ./scripts/full-matrix-evaluate.js",
     "evidence:ai": "node ./scripts/run-ai-proof.js",
     "evidence:hackathon": "node ./scripts/hackathon-evidence.js",
-    "evidence:submission": "node ./scripts/submission-pack.js"
+    "evidence:submission": "node ./scripts/submission-pack.js",
+    "evidence:submission:final": "node ./scripts/submission-pack.js --workdirs heavy-matrix-eval-slim --requirements ./.codemod-eval-final/hackathon-requirements.json --ai-proof ./.codemod-eval-final/ai-proof-summary.json --output-dir ./docs/submission --strict-links"
   },
   "keywords": [
     "codemod",

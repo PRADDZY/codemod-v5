@@ -1,0 +1,78 @@
+{
+  "generated_at": "2026-04-30T16:49:25.626Z",
+  "summary": {
+    "title": "OpenZeppelin v5 Safe Imports Codemod",
+    "one_liner": "Codemod + AI workflow that automates OpenZeppelin Solidity import migration with real-repo evidence.",
+    "completion_percent": 100
+  },
+  "links": {
+    "github_repo": "https://github.com/PRADDZY/codemod-v5",
+    "codemod_registry": "https://app.codemod.com/registry/%40praddzy/openzeppelin-v5-safe-imports",
+    "package_name": "@praddzy/openzeppelin-v5-safe-imports",
+    "demo_video_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160",
+    "case_study_url": "https://github.com/PRADDZY/codemod-v5/blob/main/docs/submission/medium_case_study_final.md"
+  },
+  "evidence": {
+    "ai_workflow_status": 0,
+    "todo_before": 151,
+    "todo_after": 151,
+    "repositories": [
+      {
+        "target": "foundry-defi-stablecoin-cu",
+        "summary_path": "heavy-matrix-eval-slim/foundry-defi-stablecoin-cu/evaluation-summary.json",
+        "repo_url": "https://github.com/Cyfrin/foundry-defi-stablecoin-cu.git",
+        "ref": "75c9add34c3e987812d96c93930fc821f4f9f9fb",
+        "baseline_compile": 0,
+        "baseline_test": 0,
+        "post_compile": 0,
+        "post_test": 0,
+        "regression_any": false,
+        "verdict": "pass",
+        "reason": "All requested baseline and post-codemod checks passed.",
+        "selected_tier_mb": 4096
+      },
+      {
+        "target": "openzeppelin-contracts",
+        "summary_path": "heavy-matrix-eval-slim/openzeppelin-contracts/evaluation-summary.json",
+        "repo_url": "https://github.com/OpenZeppelin/openzeppelin-contracts.git",
+        "ref": "dc44c9f1a4c3b10af99492eed84f83ed244203f6",
+        "baseline_compile": 0,
+        "baseline_test": 0,
+        "post_compile": 0,
+        "post_test": 0,
+        "regression_any": false,
+        "verdict": "pass",
+        "reason": "All requested baseline and post-codemod checks passed.",
+        "selected_tier_mb": 4096
+      },
+      {
+        "target": "openzeppelin-contracts-upgradeable",
+        "summary_path": "heavy-matrix-eval-slim/openzeppelin-contracts-upgradeable/evaluation-summary.json",
+        "repo_url": "https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable.git",
+        "ref": "2d081f24cac1a867f6f73d512f2022e1fa987854",
+        "baseline_compile": 0,
+        "baseline_test": 0,
+        "post_compile": 0,
+        "post_test": 0,
+        "regression_any": false,
+        "verdict": "pass",
+        "reason": "All requested baseline and post-codemod checks passed.",
+        "selected_tier_mb": 4096
+      }
+    ]
+  },
+  "assets": {
+    "dorahacks_submission_markdown": "dorahacks_submission_draft.md",
+    "medium_case_study_markdown": "medium_case_study_draft.md",
+    "demo_runbook_markdown": "demo_runbook.md",
+    "competitor_gap_notes_markdown": "competitor_gap_notes.md",
+    "dorahacks_submission_final_markdown": "dorahacks_submission_final.md",
+    "medium_case_study_final_markdown": "medium_case_study_final.md",
+    "dorahacks_form_payload_markdown": "dorahacks_form_payload.md",
+    "demo_script_markdown": "demo_script_90s.md",
+    "final_checklist_markdown": "final_checklist.md",
+    "evidence_manifest_json": "evidence_manifest.json",
+    "evidence_sources_markdown": "evidence_sources.md",
+    "metrics_json": "metrics.json"
+  }
+}
