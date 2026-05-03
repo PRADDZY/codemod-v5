@@ -9,9 +9,9 @@ Codemod + AI workflow that automates OpenZeppelin Solidity import migration with
 ## Core links
 - GitHub: https://github.com/PRADDZY/codemod-v5
 - Registry: https://app.codemod.com/registry/%40praddzy/openzeppelin-v5-safe-imports
-- Demo video: https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160
+- Verification run: https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160
 - Live demo: https://oz-v5-live-replay-demo.dpratik3005.workers.dev
-- Case study: https://github.com/PRADDZY/codemod-v5/blob/main/docs/submission/devto_case_study_ready.md
+- Case study: https://dev.to/pratik_daithankar_4a5c141/openzeppelin-v5-final-case-study-116k
 
 ## Proof summary
 - Requirement completion: 100%

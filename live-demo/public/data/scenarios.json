@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-03T10:28:14.372Z",
+  "generated_at": "2026-05-03T11:08:12.692Z",
   "title": "OpenZeppelin v5 Safe Imports Live Replay",
   "description": "Interactive replay of verified codemod runs. This demo serves precomputed evidence and does not execute arbitrary repositories at runtime.",
   "links": {
@@ -8,7 +8,7 @@
     "package_name": "@praddzy/openzeppelin-v5-safe-imports",
     "demo_video_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160",
     "live_demo_url": "https://oz-v5-live-replay-demo.dpratik3005.workers.dev",
-    "case_study_url": "https://github.com/PRADDZY/codemod-v5/blob/main/docs/submission/devto_case_study_ready.md"
+    "case_study_url": "https://dev.to/pratik_daithankar_4a5c141/openzeppelin-v5-final-case-study-116k"
   },
   "summary": {
     "completion_percent": 100,

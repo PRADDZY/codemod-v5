@@ -23,7 +23,7 @@
       "platform": "Cloudflare Workers",
       "worker_name": "oz-v5-live-replay-demo",
       "url": "https://oz-v5-live-replay-demo.dpratik3005.workers.dev",
-      "version_id": "b38fe9bb-baa0-4d02-8d87-ee6b6b047cc3"
+      "version_id": "475a7b9c-2d45-4651-b761-1743669be29c"
     }
   },
   "local_backups": [

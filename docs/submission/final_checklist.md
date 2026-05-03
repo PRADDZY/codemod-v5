@@ -5,7 +5,7 @@
 - [x] AI edge-case flow included
 - [x] Real repo proof included
 - [x] AI proof workflow status is passing
-- [x] Public demo video URL attached
+- [x] Public verification run URL attached
 - [x] Public live demo URL attached
 - [x] Public case-study URL attached
 

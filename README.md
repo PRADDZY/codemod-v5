@@ -89,7 +89,7 @@ export CODEMOD_API_KEY="..."
 npm run evaluate:matrix -- --mode full --workdir .codemod-eval-final --memory-tiers 4096,6144,8192,12288
 ```
 
-Build the final submission payload files (`metrics.json`, draft markdowns, and payload JSON):
+Build the final submission payload files (`metrics.json`, final markdowns, and payload JSON):
 
 ```bash
 npm run evidence:submission
@@ -98,8 +98,9 @@ npm run evidence:submission
 Strict final packaging to `docs/submission` (requires public links):
 
 ```bash
-export SUBMISSION_DEMO_URL="https://<your-demo-video-url>"
-export SUBMISSION_CASE_STUDY_URL="https://<your-case-study-url>"
+export SUBMISSION_DEMO_URL="https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160"
+export SUBMISSION_LIVE_DEMO_URL="https://oz-v5-live-replay-demo.dpratik3005.workers.dev"
+export SUBMISSION_CASE_STUDY_URL="https://dev.to/pratik_daithankar_4a5c141/openzeppelin-v5-final-case-study-116k"
 npm run evidence:submission:final
 ```
 
@@ -112,9 +113,9 @@ npm ci
 npm test
 npm run evidence:ai -- --target .codemod-eval-final/openzeppelin-contracts-upgradeable --workflow-path . --output .codemod-eval-final/ai-proof-summary.json
 npm run evidence:hackathon -- --workdirs .codemod-eval-final,.codemod-eval --ai-proof .codemod-eval-final/ai-proof-summary.json --output .codemod-eval-final/hackathon-requirements.json
-export SUBMISSION_DEMO_URL="https://<your-demo-video-url>"
-export SUBMISSION_LIVE_DEMO_URL="https://<your-live-demo-url>"
-export SUBMISSION_CASE_STUDY_URL="https://<your-case-study-url>"
+export SUBMISSION_DEMO_URL="https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160"
+export SUBMISSION_LIVE_DEMO_URL="https://oz-v5-live-replay-demo.dpratik3005.workers.dev"
+export SUBMISSION_CASE_STUDY_URL="https://dev.to/pratik_daithankar_4a5c141/openzeppelin-v5-final-case-study-116k"
 npm run evidence:submission:final
 ```
 
@@ -149,10 +150,6 @@ npm run live-demo:deploy
 ```
 
 The live demo is an interactive replay viewer over verified runs; it does not execute arbitrary repositories at runtime.
-
-Notebook option for Kaggle runtime:
-
-- `kaggle_full_verdict.ipynb`
 
 Optional repo-level evaluation:
 

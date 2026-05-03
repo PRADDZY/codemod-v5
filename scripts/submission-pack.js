@@ -12,9 +12,12 @@ const DEFAULT_REPO_URL = "https://github.com/PRADDZY/codemod-v5";
 const DEFAULT_REGISTRY_URL =
   "https://app.codemod.com/registry/%40praddzy/openzeppelin-v5-safe-imports";
 const DEFAULT_PACKAGE_NAME = "@praddzy/openzeppelin-v5-safe-imports";
-const DEFAULT_DEMO_URL = "";
-const DEFAULT_LIVE_DEMO_URL = "";
-const DEFAULT_CASE_STUDY_URL = "";
+const DEFAULT_DEMO_URL =
+  "https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160";
+const DEFAULT_LIVE_DEMO_URL =
+  "https://oz-v5-live-replay-demo.dpratik3005.workers.dev";
+const DEFAULT_CASE_STUDY_URL =
+  "https://dev.to/pratik_daithankar_4a5c141/openzeppelin-v5-final-case-study-116k";
 
 export function parseSubmissionPackArgs(argv) {
   const options = {
@@ -149,7 +152,7 @@ export function ensureRequiredLinks({
   }
   if (!isValidHttpUrl(demoUrl)) {
     throw new Error(
-      "Missing or invalid demo URL. Provide --demo-url (or SUBMISSION_DEMO_URL).",
+      "Missing or invalid verification-run URL. Provide --demo-url (or SUBMISSION_DEMO_URL).",
     );
   }
   if (!isValidHttpUrl(liveDemoUrl)) {
@@ -291,6 +294,23 @@ function renderEvidenceTable(evaluations) {
   return [...header, ...rows].join("\n");
 }
 
+function finalizedLinks(metrics) {
+  return {
+    verificationRun: metrics.links.demo_video_url ?? DEFAULT_DEMO_URL,
+    liveDemo: metrics.links.live_demo_url ?? DEFAULT_LIVE_DEMO_URL,
+    caseStudy: metrics.links.case_study_url ?? DEFAULT_CASE_STUDY_URL,
+  };
+}
+
+function buildSubmissionEnvExports(metrics) {
+  const links = finalizedLinks(metrics);
+  return [
+    `export SUBMISSION_DEMO_URL="${links.verificationRun}"`,
+    `export SUBMISSION_LIVE_DEMO_URL="${links.liveDemo}"`,
+    `export SUBMISSION_CASE_STUDY_URL="${links.caseStudy}"`,
+  ];
+}
+
 function buildDoraDraft({ metrics, primaryEvidence }) {
   const status = metrics.requirement_statuses;
   const primaryLine = primaryEvidence
@@ -302,6 +322,7 @@ function buildDoraDraft({ metrics, primaryEvidence }) {
         primaryEvidence.verdict ?? "n/a"
       }).`
     : "No evaluation summary loaded. Run evaluation first.";
+  const links = finalizedLinks(metrics);
 
   return [
     "# DoraHacks Submission",
@@ -338,9 +359,9 @@ function buildDoraDraft({ metrics, primaryEvidence }) {
     `- GitHub: ${metrics.links.github_repo}`,
     `- Codemod Registry: ${metrics.links.codemod_registry}`,
     `- Package: ${metrics.links.package_name}`,
-    `- Demo video: ${metrics.links.demo_video_url ?? "not provided"}`,
-    `- Live demo: ${metrics.links.live_demo_url ?? "not provided"}`,
-    `- Case study: ${metrics.links.case_study_url ?? "not provided"}`,
+    `- Verification run: ${links.verificationRun}`,
+    `- Live demo: ${links.liveDemo}`,
+    `- Case study: ${links.caseStudy}`,
     "",
     "## Evidence Pointers",
     "- docs/submission/metrics.json",
@@ -354,9 +375,7 @@ function buildDoraDraft({ metrics, primaryEvidence }) {
     "npm test",
     "npm run evidence:ai -- --target .codemod-eval-final/openzeppelin-contracts-upgradeable --workflow-path . --output .codemod-eval-final/ai-proof-summary.json",
     "npm run evidence:hackathon -- --workdirs .codemod-eval-final,.codemod-eval --ai-proof .codemod-eval-final/ai-proof-summary.json --output .codemod-eval-final/hackathon-requirements.json",
-    "export SUBMISSION_DEMO_URL=\"https://<demo-url>\"",
-    "export SUBMISSION_LIVE_DEMO_URL=\"https://<live-demo-url>\"",
-    "export SUBMISSION_CASE_STUDY_URL=\"https://<case-study-url>\"",
+    ...buildSubmissionEnvExports(metrics),
     "npm run evidence:submission:final",
     "```",
     "",
@@ -365,8 +384,9 @@ function buildDoraDraft({ metrics, primaryEvidence }) {
 
 function buildMediumDraft(metrics) {
   const primary = pickPrimaryEvidence(metrics.real_repo_evidence);
+  const links = finalizedLinks(metrics);
   return [
-    "# Case Study Draft",
+    "# Case Study",
     "",
     "## Problem",
     "Teams upgrading Solidity repos to OpenZeppelin v5 spend time on repetitive import rewrites and manual triage.",
@@ -395,14 +415,16 @@ function buildMediumDraft(metrics) {
         }).`
       : "No primary run selected.",
     "",
-    "## Demo",
-    `Demo link: ${metrics.links.demo_video_url ?? "not provided"}`,
-    `Live demo link: ${metrics.links.live_demo_url ?? "not provided"}`,
+    "## Proof Links",
+    `Verification run: ${links.verificationRun}`,
+    `Live demo: ${links.liveDemo}`,
+    `Case study: ${links.caseStudy}`,
     "",
   ].join("\n");
 }
 
 function buildDevtoCaseStudy(metrics) {
+  const links = finalizedLinks(metrics);
   return [
     "# OpenZeppelin v5 Migration with Deterministic Codemods + AI Edge-Case Review",
     "",
@@ -435,22 +457,21 @@ function buildDevtoCaseStudy(metrics) {
     "npm test",
     "npm run evidence:ai -- --target .codemod-eval-final/openzeppelin-contracts-upgradeable --workflow-path . --output .codemod-eval-final/ai-proof-summary.json",
     "npm run evidence:hackathon -- --workdirs .codemod-eval-final,.codemod-eval --ai-proof .codemod-eval-final/ai-proof-summary.json --output .codemod-eval-final/hackathon-requirements.json",
-    "export SUBMISSION_DEMO_URL=\"https://<demo-url>\"",
-    "export SUBMISSION_LIVE_DEMO_URL=\"https://<live-demo-url>\"",
-    "export SUBMISSION_CASE_STUDY_URL=\"https://<case-study-url>\"",
+    ...buildSubmissionEnvExports(metrics),
     "npm run evidence:submission:final",
     "```",
     "",
     "## Links",
     `- GitHub: ${metrics.links.github_repo}`,
     `- Registry: ${metrics.links.codemod_registry}`,
-    `- Demo video: ${metrics.links.demo_video_url ?? "not provided"}`,
-    `- Live demo: ${metrics.links.live_demo_url ?? "not provided"}`,
+    `- Verification run: ${links.verificationRun}`,
+    `- Live demo: ${links.liveDemo}`,
+    `- Case study: ${links.caseStudy}`,
     "",
   ].join("\n");
 }
 
-function buildDemoRunbook() {
+function buildDemoRunbook(metrics) {
   return [
     "# Demo Runbook",
     "",
@@ -465,9 +486,7 @@ function buildDemoRunbook() {
     "npm test",
     "npm run evidence:ai -- --target .codemod-eval-final/openzeppelin-contracts-upgradeable --workflow-path . --output .codemod-eval-final/ai-proof-summary.json",
     "npm run evidence:hackathon -- --workdirs .codemod-eval-final,.codemod-eval --ai-proof .codemod-eval-final/ai-proof-summary.json --output .codemod-eval-final/hackathon-requirements.json",
-    "export SUBMISSION_DEMO_URL=\"https://<demo-url>\"",
-    "export SUBMISSION_LIVE_DEMO_URL=\"https://<live-demo-url>\"",
-    "export SUBMISSION_CASE_STUDY_URL=\"https://<case-study-url>\"",
+    ...buildSubmissionEnvExports(metrics),
     "npm run evidence:submission:final",
     "```",
     "",
@@ -509,22 +528,16 @@ function buildCompetitorGapNotes(metrics) {
 }
 
 function buildEvidenceSources(metrics) {
-  const reproDemo =
-    metrics.links.demo_video_url ??
-    "https://github.com/PRADDZY/codemod-v5/actions";
-  const liveDemo = metrics.links.live_demo_url ?? "https://<your-live-demo-url>";
-  const reproCaseStudy =
-    metrics.links.case_study_url ??
-    "https://github.com/PRADDZY/codemod-v5/blob/main/docs/submission/medium_case_study_final.md";
+  const links = finalizedLinks(metrics);
   return [
     "# Evidence Sources",
     "",
     "## Canonical Links",
     `- GitHub repository: ${metrics.links.github_repo}`,
     `- Codemod registry: ${metrics.links.codemod_registry}`,
-    `- Demo video: ${reproDemo}`,
-    `- Live demo: ${liveDemo}`,
-    `- Case study: ${reproCaseStudy}`,
+    `- Verification run: ${links.verificationRun}`,
+    `- Live demo: ${links.liveDemo}`,
+    `- Case study: ${links.caseStudy}`,
     "",
     "## Canonical Evidence Files",
     "- docs/submission/metrics.json",
@@ -539,9 +552,7 @@ function buildEvidenceSources(metrics) {
     "npm test",
     "npm run evidence:ai -- --target .codemod-eval-final/openzeppelin-contracts-upgradeable --workflow-path . --output .codemod-eval-final/ai-proof-summary.json",
     "npm run evidence:hackathon -- --workdirs .codemod-eval-final,.codemod-eval --ai-proof .codemod-eval-final/ai-proof-summary.json --output .codemod-eval-final/hackathon-requirements.json",
-    "export SUBMISSION_DEMO_URL=\"https://<demo-url>\"",
-    "export SUBMISSION_LIVE_DEMO_URL=\"https://<live-demo-url>\"",
-    "export SUBMISSION_CASE_STUDY_URL=\"https://<case-study-url>\"",
+    ...buildSubmissionEnvExports(metrics),
     "npm run evidence:submission:final",
     "```",
     "",
@@ -550,6 +561,7 @@ function buildEvidenceSources(metrics) {
 
 function buildDoraFormPayload(metrics) {
   const primary = pickPrimaryEvidence(metrics.real_repo_evidence);
+  const links = finalizedLinks(metrics);
   return [
     "# DoraHacks Form Payload",
     "",
@@ -562,9 +574,9 @@ function buildDoraFormPayload(metrics) {
     "## Core links",
     `- GitHub: ${metrics.links.github_repo}`,
     `- Registry: ${metrics.links.codemod_registry}`,
-    `- Demo video: ${metrics.links.demo_video_url ?? "not provided"}`,
-    `- Live demo: ${metrics.links.live_demo_url ?? "not provided"}`,
-    `- Case study: ${metrics.links.case_study_url ?? "not provided"}`,
+    `- Verification run: ${links.verificationRun}`,
+    `- Live demo: ${links.liveDemo}`,
+    `- Case study: ${links.caseStudy}`,
     "",
     "## Proof summary",
     `- Requirement completion: ${metrics.hackathon_completion_percent}%`,
@@ -597,7 +609,7 @@ function buildFinalChecklist(metrics) {
     `- [${status.use_ai_for_edge_cases === "completed" ? "x" : " "}] AI edge-case flow included`,
     `- [${status.prove_it_works_on_real_repo === "completed" ? "x" : " "}] Real repo proof included`,
     `- [${metrics.ai_proof.workflow_status === 0 ? "x" : " "}] AI proof workflow status is passing`,
-    `- [${hasDemo ? "x" : " "}] Public demo video URL attached`,
+    `- [${hasDemo ? "x" : " "}] Public verification run URL attached`,
     `- [${hasLiveDemo ? "x" : " "}] Public live demo URL attached`,
     `- [${hasCaseStudy ? "x" : " "}] Public case-study URL attached`,
     "",
@@ -636,8 +648,6 @@ function buildSubmissionPayload({ metrics }) {
       repositories: metrics.real_repo_evidence,
     },
     assets: {
-      dorahacks_submission_markdown: "dorahacks_submission_draft.md",
-      medium_case_study_markdown: "medium_case_study_draft.md",
       demo_runbook_markdown: "demo_runbook.md",
       competitor_gap_notes_markdown: "competitor_gap_notes.md",
       dorahacks_submission_final_markdown: "dorahacks_submission_final.md",
@@ -679,7 +689,7 @@ async function loadEvaluationDocs(workdirs) {
 function buildUsageText() {
   return [
     "Usage:",
-    "  node ./scripts/submission-pack.js [--workdirs <dir1,dir2>] [--requirements <file>] [--ai-proof <file>] [--output-dir <dir>] [--demo-url <url>] [--live-demo-url <url>] [--case-study-url <url>] [--strict-links]",
+    "  node ./scripts/submission-pack.js [--workdirs <dir1,dir2>] [--requirements <file>] [--ai-proof <file>] [--output-dir <dir>] [--demo-url <verification-run-url>] [--live-demo-url <url>] [--case-study-url <url>] [--strict-links]",
     "",
     "Example:",
     "  node ./scripts/submission-pack.js --workdirs .codemod-eval-final,.codemod-eval --requirements ./.codemod-eval-final/hackathon-requirements.json --ai-proof ./.codemod-eval-final/ai-proof-summary.json --output-dir ./docs/submission --strict-links --demo-url https://example.com/demo --live-demo-url https://example.com/live --case-study-url https://example.com/case-study",
@@ -726,16 +736,8 @@ async function main() {
       content: JSON.stringify(metrics, null, 2),
     },
     {
-      name: "dorahacks_submission_draft.md",
-      content: buildDoraDraft({ metrics, primaryEvidence }),
-    },
-    {
       name: "dorahacks_submission_final.md",
       content: buildDoraDraft({ metrics, primaryEvidence }),
-    },
-    {
-      name: "medium_case_study_draft.md",
-      content: buildMediumDraft(metrics),
     },
     {
       name: "medium_case_study_final.md",
@@ -747,7 +749,7 @@ async function main() {
     },
     {
       name: "demo_runbook.md",
-      content: buildDemoRunbook(),
+      content: buildDemoRunbook(metrics),
     },
     {
       name: "demo_script_90s.md",

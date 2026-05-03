@@ -192,7 +192,7 @@ describe("submission-pack link guards", () => {
         liveDemoUrl: "https://example.com/live",
         caseStudyUrl: "https://example.com/case",
       }),
-    ).toThrow("Missing or invalid demo URL");
+    ).toThrow("Missing or invalid verification-run URL");
 
     expect(() =>
       ensureRequiredLinks({
