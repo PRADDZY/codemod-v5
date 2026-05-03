@@ -24,7 +24,10 @@
     "evidence:ai": "node ./scripts/run-ai-proof.js",
     "evidence:hackathon": "node ./scripts/hackathon-evidence.js",
     "evidence:submission": "node ./scripts/submission-pack.js",
-    "evidence:submission:final": "node ./scripts/submission-pack.js --workdirs heavy-matrix-eval-slim --requirements ./.codemod-eval-final/hackathon-requirements.json --ai-proof ./.codemod-eval-final/ai-proof-summary.json --output-dir ./docs/submission --strict-links"
+    "evidence:submission:final": "node ./scripts/submission-pack.js --workdirs heavy-matrix-eval-slim --requirements ./.codemod-eval-final/hackathon-requirements.json --ai-proof ./.codemod-eval-final/ai-proof-summary.json --output-dir ./docs/submission --strict-links",
+    "live-demo:data": "node ./scripts/build-live-demo-data.js",
+    "live-demo:dev": "npm run live-demo:data && npx wrangler dev --config live-demo/wrangler.toml",
+    "live-demo:deploy": "npm run live-demo:data && npx wrangler deploy --config live-demo/wrangler.toml"
   },
   "keywords": [
     "codemod",

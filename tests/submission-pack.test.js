@@ -38,6 +38,8 @@ describe("submission-pack argument parsing", () => {
       "@example/pkg",
       "--demo-url",
       "https://example.com/demo",
+      "--live-demo-url",
+      "https://example.com/live",
       "--case-study-url",
       "https://example.com/case-study",
       "--strict-links",
@@ -51,6 +53,7 @@ describe("submission-pack argument parsing", () => {
     expect(parsed.registryUrl).toBe("https://app.codemod.com/registry/example");
     expect(parsed.packageName).toBe("@example/pkg");
     expect(parsed.demoUrl).toBe("https://example.com/demo");
+    expect(parsed.liveDemoUrl).toBe("https://example.com/live");
     expect(parsed.caseStudyUrl).toBe("https://example.com/case-study");
     expect(parsed.strictLinks).toBe(true);
   });
@@ -186,6 +189,7 @@ describe("submission-pack link guards", () => {
       ensureRequiredLinks({
         strictLinks: true,
         demoUrl: "",
+        liveDemoUrl: "https://example.com/live",
         caseStudyUrl: "https://example.com/case",
       }),
     ).toThrow("Missing or invalid demo URL");
@@ -194,6 +198,16 @@ describe("submission-pack link guards", () => {
       ensureRequiredLinks({
         strictLinks: true,
         demoUrl: "https://example.com/demo",
+        liveDemoUrl: "",
+        caseStudyUrl: "https://example.com/case",
+      }),
+    ).toThrow("Missing or invalid live demo URL");
+
+    expect(() =>
+      ensureRequiredLinks({
+        strictLinks: true,
+        demoUrl: "https://example.com/demo",
+        liveDemoUrl: "https://example.com/live",
         caseStudyUrl: "",
       }),
     ).toThrow("Missing or invalid case-study URL");
@@ -202,6 +216,7 @@ describe("submission-pack link guards", () => {
       ensureRequiredLinks({
         strictLinks: true,
         demoUrl: "https://example.com/demo",
+        liveDemoUrl: "https://example.com/live",
         caseStudyUrl: "https://example.com/case",
       }),
     ).not.toThrow();

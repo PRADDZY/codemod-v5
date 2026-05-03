@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-30T17:52:02.541Z",
+  "generated_at": "2026-05-03T10:27:23.485Z",
   "hackathon_completion_percent": 100,
   "requirement_statuses": {
     "pick_real_world_upgrade": "completed",
@@ -63,6 +63,7 @@
     "codemod_registry": "https://app.codemod.com/registry/%40praddzy/openzeppelin-v5-safe-imports",
     "package_name": "@praddzy/openzeppelin-v5-safe-imports",
     "demo_video_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160",
-    "case_study_url": "https://github.com/PRADDZY/codemod-v5/blob/main/docs/submission/medium_case_study_final.md"
+    "live_demo_url": "https://oz-v5-live-replay-demo.dpratik3005.workers.dev",
+    "case_study_url": "https://github.com/PRADDZY/codemod-v5/blob/main/docs/submission/devto_case_study_ready.md"
   }
 }

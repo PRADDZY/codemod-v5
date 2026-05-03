@@ -1,4 +1,4 @@
-# Medium Case Study Draft
+# Case Study Draft
 
 ## Problem
 Teams upgrading Solidity repos to OpenZeppelin v5 spend time on repetitive import rewrites and manual triage.
@@ -21,3 +21,4 @@ Primary run: foundry-defi-stablecoin-cu with baseline compile/test 0/0 and post-
 
 ## Demo
 Demo link: https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160
+Live demo link: https://oz-v5-live-replay-demo.dpratik3005.workers.dev

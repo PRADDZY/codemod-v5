@@ -113,6 +113,7 @@ npm test
 npm run evidence:ai -- --target .codemod-eval-final/openzeppelin-contracts-upgradeable --workflow-path . --output .codemod-eval-final/ai-proof-summary.json
 npm run evidence:hackathon -- --workdirs .codemod-eval-final,.codemod-eval --ai-proof .codemod-eval-final/ai-proof-summary.json --output .codemod-eval-final/hackathon-requirements.json
 export SUBMISSION_DEMO_URL="https://<your-demo-video-url>"
+export SUBMISSION_LIVE_DEMO_URL="https://<your-live-demo-url>"
 export SUBMISSION_CASE_STUDY_URL="https://<your-case-study-url>"
 npm run evidence:submission:final
 ```
@@ -126,6 +127,28 @@ Canonical submission evidence files:
 - `docs/submission/evidence_manifest.json`
 - `heavy-matrix-eval-slim/verdict-summary.json`
 - `heavy-matrix-eval-slim/*/evaluation-summary.json`
+
+## Live Replay Demo (Cloudflare Workers)
+
+Build replay data from real evidence:
+
+```bash
+npm run live-demo:data
+```
+
+Run locally:
+
+```bash
+npm run live-demo:dev
+```
+
+Deploy:
+
+```bash
+npm run live-demo:deploy
+```
+
+The live demo is an interactive replay viewer over verified runs; it does not execute arbitrary repositories at runtime.
 
 Notebook option for Kaggle runtime:
 

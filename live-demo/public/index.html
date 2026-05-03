@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenZeppelin v5 Live Replay</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="intro">
+        <div class="logo-row">
+          <img
+            src="https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/master/logo.png"
+            alt="OpenZeppelin"
+            class="logo"
+          />
+          <img
+            src="https://developers.cloudflare.com/logo.svg"
+            alt="Cloudflare Workers"
+            class="logo cloudflare"
+          />
+        </div>
+        <h1>OpenZeppelin v5 Migration Replay</h1>
+        <p class="subtitle">
+          Interactive replay of verified runs. This demo serves precomputed evidence and does not execute arbitrary repositories at runtime.
+        </p>
+      </section>
+
+      <section class="summary" id="summary"></section>
+
+      <section class="grid">
+        <aside class="panel scenario-list">
+          <h2>Scenarios</h2>
+          <div id="scenario-list"></div>
+        </aside>
+
+        <section class="panel scenario-details">
+          <div id="scenario-header"></div>
+          <div id="scenario-checks"></div>
+
+          <h3>Representative Diff Samples</h3>
+          <div id="diff-samples"></div>
+
+          <h3>Run Commands</h3>
+          <pre id="run-commands"></pre>
+
+          <h3>Logs Excerpt</h3>
+          <div class="log-grid">
+            <div>
+              <h4>Codemod</h4>
+              <pre id="log-codemod"></pre>
+            </div>
+            <div>
+              <h4>Compile (Before)</h4>
+              <pre id="log-compile-before"></pre>
+            </div>
+            <div>
+              <h4>Compile (After)</h4>
+              <pre id="log-compile-after"></pre>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

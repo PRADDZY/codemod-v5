@@ -1,0 +1,242 @@
+{
+  "generated_at": "2026-05-03T10:28:14.372Z",
+  "title": "OpenZeppelin v5 Safe Imports Live Replay",
+  "description": "Interactive replay of verified codemod runs. This demo serves precomputed evidence and does not execute arbitrary repositories at runtime.",
+  "links": {
+    "github_repo": "https://github.com/PRADDZY/codemod-v5",
+    "codemod_registry": "https://app.codemod.com/registry/%40praddzy/openzeppelin-v5-safe-imports",
+    "package_name": "@praddzy/openzeppelin-v5-safe-imports",
+    "demo_video_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160",
+    "live_demo_url": "https://oz-v5-live-replay-demo.dpratik3005.workers.dev",
+    "case_study_url": "https://github.com/PRADDZY/codemod-v5/blob/main/docs/submission/devto_case_study_ready.md"
+  },
+  "summary": {
+    "completion_percent": 100,
+    "ai_workflow_status": 0,
+    "todo_before": 151,
+    "todo_after": 151,
+    "scenario_count": 3
+  },
+  "scenarios": [
+    {
+      "id": "foundry-defi-stablecoin-cu",
+      "name": "foundry-defi-stablecoin-cu",
+      "repo_url": "https://github.com/Cyfrin/foundry-defi-stablecoin-cu.git",
+      "ref": "75c9add34c3e987812d96c93930fc821f4f9f9fb",
+      "verdict": "pass",
+      "reason": "All requested baseline and post-codemod checks passed.",
+      "selected_tier_mb": 4096,
+      "checks": {
+        "baseline_compile": 0,
+        "baseline_test": 0,
+        "post_compile": 0,
+        "post_test": 0,
+        "regression_any": false
+      },
+      "timings_ms": {
+        "evaluation_total": 20828,
+        "codemod": 5892,
+        "baseline_compile": 10063,
+        "baseline_test": 1591,
+        "post_compile": 1167,
+        "post_test": 1697
+      },
+      "todo_markers": {
+        "total": 10,
+        "categories": [
+          {
+            "category": "ownable_constructor_initial_owner",
+            "count": 9
+          },
+          {
+            "category": "import_path_layout_review",
+            "count": 1
+          }
+        ]
+      },
+      "logs": {
+        "codemod_stdout_excerpt": " Workflow started with ID: e3c8c105-d9e5-475f-ba40-c202b620e356\n[1;36m Apply safe OpenZeppelin migration[0m\n Workflow completed successfully in 3.0s\n Done in 3.002s\nMetrics:\n  todo_markers:\n    10\n  todo_categories:\n    category=ownable_constructor_initial_owner: 9\n    category=import_path_layout_review: 1",
+        "baseline_compile_excerpt": "Submodule path 'lib/chainlink-brownie-contracts': checked out 'c6d0ca512f1b09d93bc81415d246dbee7e5c6894'\nSubmodule path 'lib/forge-std': checked out 'fc560fa34fa12a335a50c35d92e55a6628ca467c'\nSubmodule path 'lib/forge-std/lib/ds-test': checked out 'e282159d5170298eb2455a6c05280ab5a73a4ef0'\nSubmodule path 'lib/foundry-devops': checked out '5415faa72d362368cd5a044602c8c6a11bb497be'\nSubmodule path 'lib/foundry-devops/lib/forge-std': checked out 'c22437a63d1c3418869bc35a7c55a5175a09b701'\nSubmodule path 'lib/foundry-devops/lib/forge-std/lib/ds-test': checked out 'e282159d5170298eb2455a6c05280ab5a73a4ef0'\nSubmodule path 'lib/openzeppelin-contracts': checked out '0a25c1940ca220686588c4af3ec526f725fe2582'\nSubmodule path 'lib/openzeppelin-contracts/lib/forge-std': checked out 'c2236853aadb8e2d9909bbecdc490099519b70a4'\nSubmodule path 'lib/openzeppelin-contracts/lib/forge-std/lib/ds-test': checked out '6da7dd8f7395f83e1fb6fa88a64ba9a030f85d4f'\nCompiling 45 files with Solc 0.8.19\ninstalling solc version \"0.8.19\"\nSuccessfully installed solc 0.8.19\nSolc 0.8.19 finished in 1.31s\nCompiler run successful!",
+        "post_compile_excerpt": "Compiling 13 files with Solc 0.8.19\nSolc 0.8.19 finished in 1.02s\nCompiler run successful!",
+        "baseline_test_excerpt": "No files changed, compilation skipped\nRan 4 tests for test/unit/DecentralizedStablecoinTest.t.sol:DecentralizedStablecoinTest\n[PASS] testCantBurnMoreThanYouHave() (gas: 62655)\n[PASS] testCantMintToZeroAddress() (gas: 14845)\n[PASS] testMustBurnMoreThanZero() (gas: 62652)\n[PASS] testMustMintMoreThanZero() (gas: 13655)\nSuite result: ok. 4 passed; 0 failed; 0 skipped; finished in 770.63s (231.61s CPU time)\nRan 3 tests for test/unit/OracleLibTest.t.sol:OracleLibTest\n[PASS] testGetTimeout() (gas: 6446)\n[PASS] testPriceRevertsOnBadAnsweredInRound() (gas: 27611)\n[PASS] testPriceRevertsOnStaleCheck() (gas: 25511)\nSuite result: ok. 3 passed; 0 failed; 0 skipped; finished in 399.36s (137.81s CPU time)\nRan 41 tests for test/unit/DSCEngineTest.t.sol:DSCEngineTest\n[PASS] testCanBurnDsc() (gas: 258819)",
+        "post_test_excerpt": "No files changed, compilation skipped\nRan 4 tests for test/unit/DecentralizedStablecoinTest.t.sol:DecentralizedStablecoinTest\n[PASS] testCantBurnMoreThanYouHave() (gas: 62655)\n[PASS] testCantMintToZeroAddress() (gas: 14845)\n[PASS] testMustBurnMoreThanZero() (gas: 62652)\n[PASS] testMustMintMoreThanZero() (gas: 13655)\nSuite result: ok. 4 passed; 0 failed; 0 skipped; finished in 770.87s (245.62s CPU time)\nRan 3 tests for test/unit/OracleLibTest.t.sol:OracleLibTest\n[PASS] testGetTimeout() (gas: 6446)\n[PASS] testPriceRevertsOnBadAnsweredInRound() (gas: 27611)\n[PASS] testPriceRevertsOnStaleCheck() (gas: 25511)\nSuite result: ok. 3 passed; 0 failed; 0 skipped; finished in 429.68s (166.36s CPU time)\nRan 41 tests for test/unit/DSCEngineTest.t.sol:DSCEngineTest\n[PASS] testCanBurnDsc() (gas: 258819)"
+      },
+      "diff_samples": [
+        {
+          "label": "ReentrancyGuard import move",
+          "before": "import \"@openzeppelin/contracts/security/ReentrancyGuard.sol\";",
+          "after": "import \"@openzeppelin/contracts/utils/ReentrancyGuard.sol\";"
+        },
+        {
+          "label": "Pausable import move",
+          "before": "import \"@openzeppelin/contracts/security/Pausable.sol\";",
+          "after": "import \"@openzeppelin/contracts/utils/Pausable.sol\";"
+        },
+        {
+          "label": "Upgradeable symbol rewrite",
+          "before": "import \"@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol\";",
+          "after": "import \"@openzeppelin/contracts/token/ERC20/IERC20.sol\";"
+        }
+      ],
+      "run_commands": [
+        "npm ci",
+        "npm test",
+        "npm run evaluate:matrix -- --mode full --workdir .codemod-eval-final --memory-tiers 4096,6144,8192,12288",
+        "npm run evidence:submission:final"
+      ],
+      "evidence_links": {
+        "summary_path": "heavy-matrix-eval-slim/foundry-defi-stablecoin-cu/evaluation-summary.json",
+        "verdict_summary_path": "heavy-matrix-eval-slim/verdict-summary.json",
+        "workflow_run_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160"
+      }
+    },
+    {
+      "id": "openzeppelin-contracts",
+      "name": "openzeppelin-contracts",
+      "repo_url": "https://github.com/OpenZeppelin/openzeppelin-contracts.git",
+      "ref": "dc44c9f1a4c3b10af99492eed84f83ed244203f6",
+      "verdict": "pass",
+      "reason": "All requested baseline and post-codemod checks passed.",
+      "selected_tier_mb": 4096,
+      "checks": {
+        "baseline_compile": 0,
+        "baseline_test": 0,
+        "post_compile": 0,
+        "post_test": 0,
+        "regression_any": false
+      },
+      "timings_ms": {
+        "evaluation_total": 1277373,
+        "codemod": 5789,
+        "baseline_compile": 119649,
+        "baseline_test": 536544,
+        "post_compile": 80203,
+        "post_test": 531630
+      },
+      "todo_markers": {
+        "total": 172,
+        "categories": [
+          {
+            "category": "removed_module_usage",
+            "count": 91
+          },
+          {
+            "category": "token_hooks_update_migration",
+            "count": 81
+          }
+        ]
+      },
+      "logs": {
+        "codemod_stdout_excerpt": " Workflow started with ID: f80cf071-63f7-42ac-8bc4-edd17f9beb20\n[1;36m Apply safe OpenZeppelin migration[0m\n Workflow completed successfully in 5.0s\n Done in 5.004s\nMetrics:\n  todo_categories:\n    category=removed_module_usage: 91\n    category=token_hooks_update_migration: 81\n  todo_markers:\n    172",
+        "baseline_compile_excerpt": "> openzeppelin-solidity@4.9.6 prepare\n> scripts/prepare.sh\n> openzeppelin-solidity@4.9.6 clean\n> hardhat clean && rimraf build contracts/build\n> openzeppelin-solidity@4.9.6 compile\n> hardhat compile\nDownloading compiler 0.8.13\nCompiled 263 Solidity files successfully\nadded 1326 packages, and audited 1327 packages in 2m\n182 packages are looking for funding\n  run `npm fund` for details\n110 vulnerabilities (11 low, 55 moderate, 33 high, 11 critical)\nTo address issues that do not require attention, run:\n  npm audit fix\nTo address all issues possible (including breaking changes), run:\n  npm audit fix --force\nSome issues need review, and may require choosing\na different dependency.",
+        "post_compile_excerpt": "> openzeppelin-solidity@4.9.6 prepare\n> scripts/prepare.sh\n> openzeppelin-solidity@4.9.6 clean\n> hardhat clean && rimraf build contracts/build\n> openzeppelin-solidity@4.9.6 compile\n> hardhat compile\nCompiled 263 Solidity files successfully\nup to date, audited 1327 packages in 1m\n182 packages are looking for funding\n  run `npm fund` for details\n110 vulnerabilities (11 low, 55 moderate, 33 high, 11 critical)\nTo address issues that do not require attention, run:\n  npm audit fix\nTo address all issues possible (including breaking changes), run:\n  npm audit fix --force\nSome issues need review, and may require choosing\na different dependency.\nRun `npm audit` for details.",
+        "baseline_test_excerpt": "[hardhat-shards] discovered_files=133 shard_size=20 shard_count=7 node_options=\"--max-old-space-size=4096\"\n[hardhat-shards] shard=1/7 files=20 first=\"test/access/AccessControl.behavior.js\" last=\"test/governance/Governor.test.js\"\n  Contract: AccessControl\n    ERC165\n       supportsInterface uses less than 30k gas\n       all interfaces are reported as supported\n       all interface functions are in ABI\n    default admin\n       deployer has default admin role\n       other roles's admin is the default admin role\n       default admin role's admin is itself\n    granting\n       non-admin cannot grant role to other accounts (152ms)\n       accounts can be granted a role multiple times",
+        "post_test_excerpt": "[hardhat-shards] discovered_files=133 shard_size=20 shard_count=7 node_options=\"--max-old-space-size=4096\"\n[hardhat-shards] shard=1/7 files=20 first=\"test/access/AccessControl.behavior.js\" last=\"test/governance/Governor.test.js\"\n  Contract: AccessControl\n    ERC165\n       supportsInterface uses less than 30k gas\n       all interfaces are reported as supported\n       all interface functions are in ABI\n    default admin\n       deployer has default admin role\n       other roles's admin is the default admin role\n       default admin role's admin is itself\n    granting\n       non-admin cannot grant role to other accounts (154ms)\n       accounts can be granted a role multiple times"
+      },
+      "diff_samples": [
+        {
+          "label": "ReentrancyGuard import move",
+          "before": "import \"@openzeppelin/contracts/security/ReentrancyGuard.sol\";",
+          "after": "import \"@openzeppelin/contracts/utils/ReentrancyGuard.sol\";"
+        },
+        {
+          "label": "Pausable import move",
+          "before": "import \"@openzeppelin/contracts/security/Pausable.sol\";",
+          "after": "import \"@openzeppelin/contracts/utils/Pausable.sol\";"
+        },
+        {
+          "label": "Upgradeable symbol rewrite",
+          "before": "import \"@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol\";",
+          "after": "import \"@openzeppelin/contracts/token/ERC20/IERC20.sol\";"
+        }
+      ],
+      "run_commands": [
+        "npm ci",
+        "npm test",
+        "npm run evaluate:matrix -- --mode full --workdir .codemod-eval-final --memory-tiers 4096,6144,8192,12288",
+        "npm run evidence:submission:final"
+      ],
+      "evidence_links": {
+        "summary_path": "heavy-matrix-eval-slim/openzeppelin-contracts/evaluation-summary.json",
+        "verdict_summary_path": "heavy-matrix-eval-slim/verdict-summary.json",
+        "workflow_run_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160"
+      }
+    },
+    {
+      "id": "openzeppelin-contracts-upgradeable",
+      "name": "openzeppelin-contracts-upgradeable",
+      "repo_url": "https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable.git",
+      "ref": "2d081f24cac1a867f6f73d512f2022e1fa987854",
+      "verdict": "pass",
+      "reason": "All requested baseline and post-codemod checks passed.",
+      "selected_tier_mb": 4096,
+      "checks": {
+        "baseline_compile": 0,
+        "baseline_test": 0,
+        "post_compile": 0,
+        "post_test": 0,
+        "regression_any": false
+      },
+      "timings_ms": {
+        "evaluation_total": 2118762,
+        "codemod": 5918,
+        "baseline_compile": 136182,
+        "baseline_test": 924053,
+        "post_compile": 137406,
+        "post_test": 912323
+      },
+      "todo_markers": {
+        "total": 151,
+        "categories": [
+          {
+            "category": "token_hooks_update_migration",
+            "count": 81
+          },
+          {
+            "category": "removed_module_usage",
+            "count": 60
+          },
+          {
+            "category": "ownable_initializer_initial_owner",
+            "count": 10
+          }
+        ]
+      },
+      "logs": {
+        "codemod_stdout_excerpt": " Workflow started with ID: 31969aa9-2174-48df-ad10-4525d78e2f8a\n[1;36m Apply safe OpenZeppelin migration[0m\n Workflow completed successfully in 5.0s\n Done in 5.004s\nMetrics:\n  todo_categories:\n    category=token_hooks_update_migration: 81\n    category=removed_module_usage: 60\n    category=ownable_initializer_initial_owner: 10\n  todo_markers:\n    151",
+        "baseline_compile_excerpt": "> openzeppelin-solidity@4.9.6 prepare\n> scripts/prepare.sh\n> openzeppelin-solidity@4.9.6 clean\n> hardhat clean && rimraf build contracts/build\n> openzeppelin-solidity@4.9.6 compile\n> hardhat compile\nCompiled 259 Solidity files successfully\nadded 1326 packages, and audited 1327 packages in 2m\n182 packages are looking for funding\n  run `npm fund` for details\n110 vulnerabilities (11 low, 55 moderate, 33 high, 11 critical)\nTo address issues that do not require attention, run:\n  npm audit fix\nTo address all issues possible (including breaking changes), run:\n  npm audit fix --force\nSome issues need review, and may require choosing\na different dependency.\nRun `npm audit` for details.",
+        "post_compile_excerpt": "> openzeppelin-solidity@4.9.6 prepare\n> scripts/prepare.sh\n> openzeppelin-solidity@4.9.6 clean\n> hardhat clean && rimraf build contracts/build\n> openzeppelin-solidity@4.9.6 compile\n> hardhat compile\nCompiled 259 Solidity files successfully\nup to date, audited 1327 packages in 2m\n182 packages are looking for funding\n  run `npm fund` for details\n110 vulnerabilities (11 low, 55 moderate, 33 high, 11 critical)\nTo address issues that do not require attention, run:\n  npm audit fix\nTo address all issues possible (including breaking changes), run:\n  npm audit fix --force\nSome issues need review, and may require choosing\na different dependency.\nRun `npm audit` for details.",
+        "baseline_test_excerpt": "[hardhat-shards] discovered_files=133 shard_size=20 shard_count=7 node_options=\"--max-old-space-size=4096\"\n[hardhat-shards] shard=1/7 files=20 first=\"test/access/AccessControl.behavior.js\" last=\"test/governance/Governor.test.js\"\n  Contract: AccessControl\n    ERC165\n       supportsInterface uses less than 30k gas\n       all interfaces are reported as supported\n       all interface functions are in ABI\n    default admin\n       deployer has default admin role\n       other roles's admin is the default admin role\n       default admin role's admin is itself\n    granting\n       non-admin cannot grant role to other accounts (196ms)\n       accounts can be granted a role multiple times",
+        "post_test_excerpt": "[hardhat-shards] discovered_files=133 shard_size=20 shard_count=7 node_options=\"--max-old-space-size=4096\"\n[hardhat-shards] shard=1/7 files=20 first=\"test/access/AccessControl.behavior.js\" last=\"test/governance/Governor.test.js\"\n  Contract: AccessControl\n    ERC165\n       supportsInterface uses less than 30k gas (69ms)\n       all interfaces are reported as supported\n       all interface functions are in ABI\n    default admin\n       deployer has default admin role\n       other roles's admin is the default admin role\n       default admin role's admin is itself\n    granting\n       non-admin cannot grant role to other accounts (967ms)\n       accounts can be granted a role multiple times (99ms)"
+      },
+      "diff_samples": [
+        {
+          "label": "ReentrancyGuard import move",
+          "before": "import \"@openzeppelin/contracts/security/ReentrancyGuard.sol\";",
+          "after": "import \"@openzeppelin/contracts/utils/ReentrancyGuard.sol\";"
+        },
+        {
+          "label": "Pausable import move",
+          "before": "import \"@openzeppelin/contracts/security/Pausable.sol\";",
+          "after": "import \"@openzeppelin/contracts/utils/Pausable.sol\";"
+        },
+        {
+          "label": "Upgradeable symbol rewrite",
+          "before": "import \"@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol\";",
+          "after": "import \"@openzeppelin/contracts/token/ERC20/IERC20.sol\";"
+        }
+      ],
+      "run_commands": [
+        "npm ci",
+        "npm test",
+        "npm run evaluate:matrix -- --mode full --workdir .codemod-eval-final --memory-tiers 4096,6144,8192,12288",
+        "npm run evidence:submission:final"
+      ],
+      "evidence_links": {
+        "summary_path": "heavy-matrix-eval-slim/openzeppelin-contracts-upgradeable/evaluation-summary.json",
+        "verdict_summary_path": "heavy-matrix-eval-slim/verdict-summary.json",
+        "workflow_run_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160"
+      }
+    }
+  ]
+}

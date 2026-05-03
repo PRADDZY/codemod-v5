@@ -18,6 +18,12 @@
       "run_id": 25117900139,
       "run_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25117900139",
       "conclusion": "success"
+    },
+    "live_demo": {
+      "platform": "Cloudflare Workers",
+      "worker_name": "oz-v5-live-replay-demo",
+      "url": "https://oz-v5-live-replay-demo.dpratik3005.workers.dev",
+      "version_id": "b38fe9bb-baa0-4d02-8d87-ee6b6b047cc3"
     }
   },
   "local_backups": [
@@ -35,7 +41,9 @@
     "docs/submission/submission_payload.json",
     "docs/submission/dorahacks_submission_final.md",
     "docs/submission/dorahacks_form_payload.md",
+    "docs/submission/devto_case_study_ready.md",
     "docs/submission/final_checklist.md",
+    "live-demo/public/data/scenarios.json",
     "heavy-matrix-eval-slim/verdict-summary.json",
     "heavy-matrix-eval-slim/foundry-defi-stablecoin-cu/evaluation-summary.json",
     "heavy-matrix-eval-slim/openzeppelin-contracts/evaluation-summary.json",

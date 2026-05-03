@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-30T17:52:02.543Z",
+  "generated_at": "2026-05-03T10:27:23.487Z",
   "summary": {
     "title": "OpenZeppelin v5 Safe Imports Codemod",
     "one_liner": "Codemod + AI workflow that automates OpenZeppelin Solidity import migration with real-repo evidence.",
@@ -10,7 +10,8 @@
     "codemod_registry": "https://app.codemod.com/registry/%40praddzy/openzeppelin-v5-safe-imports",
     "package_name": "@praddzy/openzeppelin-v5-safe-imports",
     "demo_video_url": "https://github.com/PRADDZY/codemod-v5/actions/runs/25108419160",
-    "case_study_url": "https://github.com/PRADDZY/codemod-v5/blob/main/docs/submission/medium_case_study_final.md"
+    "live_demo_url": "https://oz-v5-live-replay-demo.dpratik3005.workers.dev",
+    "case_study_url": "https://github.com/PRADDZY/codemod-v5/blob/main/docs/submission/devto_case_study_ready.md"
   },
   "evidence": {
     "ai_workflow_status": 0,
@@ -73,6 +74,7 @@
     "final_checklist_markdown": "final_checklist.md",
     "evidence_manifest_json": "evidence_manifest.json",
     "evidence_sources_markdown": "evidence_sources.md",
-    "metrics_json": "metrics.json"
+    "metrics_json": "metrics.json",
+    "devto_case_study_markdown": "devto_case_study_ready.md"
   }
 }
